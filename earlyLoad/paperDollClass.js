@@ -25,17 +25,46 @@
         }
 
         async loadLayer(src, color = "") {
-            let n = modImgLoaderHooker.imgLookupTable.get(src);
             const img = new Image();
             img.onload = () => {
                 if (color === "") {
                     this.layers.push(img);
                 } else {
-                    const coloredLayer = this.colorLayer(img, color);
+                    const desaturatedImg = this.desaturateImage(img, 1); // 0.8 表示 80% 的去饱和度
+                    const coloredLayer = this.colorLayer(desaturatedImg, color);
                     this.layers.push(coloredLayer);
                 }
             };
             img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
+        }
+
+        desaturateImage(img, amount = 1) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                // 计算亮度（使用人眼感知权重）
+                const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+                // 应用去饱和度
+                data[i] = r + amount * (gray - r);
+                data[i + 1] = g + amount * (gray - g);
+                data[i + 2] = b + amount * (gray - b);
+                // Alpha 通道保持不变
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            return canvas;
         }
 
         colorLayer(img, hexColor) {
