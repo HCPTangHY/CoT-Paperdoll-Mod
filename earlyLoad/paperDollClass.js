@@ -15,14 +15,13 @@
         }
 
         async loadBaseModel(src) {
-            let n = modImgLoaderHooker.imgLookupTable.get(src);
             const img = new Image();
             img.onload = () => {
                 this.canvas.width = img.width;
                 this.canvas.height = img.height;
                 this.baseModel = img;
             };
-            img.src = await n.imgData.getter.getBase64Image();
+            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
         }
 
         async loadLayer(src, color = "") {
@@ -36,7 +35,7 @@
                     this.layers.push(coloredLayer);
                 }
             };
-            img.src = await n.imgData.getter.getBase64Image();
+            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
         }
 
         colorLayer(img, hexColor) {
