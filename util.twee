@@ -1,0 +1,15 @@
+:: PaperdollUtil [widget nobr]
+
+<<widget "PaperdollPC">>
+    <<run console.log($(".locimgcontainer"))>>
+    <!-- <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform: scale(1.75);transform-origin: top left;"></canvas> -->
+    <<script>>
+        (async () => {
+            const canvas = setup.createCanvas('paperdollPC-canvas');
+            let paperdoll = await setup.paperdollPC(canvas);
+            paperdoll.draw();
+            output.append(canvas.canvas);
+            console.log(paperdoll);
+        })();
+    <</script>>
+<</widget>>

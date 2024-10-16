@@ -1,7 +1,11 @@
 (async() => {
     class PaperDollSystem {
-        constructor(canvasId) {
-            this.canvas = document.getElementById(canvasId);
+        constructor(canvas) {
+            if (typeof canvas === 'string') {
+                this.canvas = document.getElementById(canvas);
+            } else {
+                this.canvas = canvas;
+            }
             this.ctx = this.canvas.getContext('2d');
             this.layers = [];
         }
@@ -30,7 +34,7 @@
                 if (color === "") {
                     this.layers.push(img);
                 } else {
-                    const desaturatedImg = this.desaturateImage(img, 1); // 0.8 表示 80% 的去饱和度
+                    const desaturatedImg = this.desaturateImage(img); // 0.8 表示 80% 的去饱和度
                     const coloredLayer = this.colorLayer(desaturatedImg, color);
                     this.layers.push(coloredLayer);
                 }
@@ -38,7 +42,7 @@
             img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
         }
 
-        desaturateImage(img, amount = 1) {
+        desaturateImage(img, params = [2, 1, 1, 1, 1]) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = img.width;
@@ -48,18 +52,22 @@
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
 
+            const [rf, gf, bf, sf, gamma] = params;
+            const f = sf / (rf + gf + bf);
+
             for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
+                if (data[i + 3] === 0) continue; // 跳过透明像素
 
-                // 计算亮度（使用人眼感知权重）
-                const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                let r = data[i] / 255;
+                let g = data[i + 1] / 255;
+                let b = data[i + 2] / 255;
 
-                // 应用去饱和度
-                data[i] = r + amount * (gray - r);
-                data[i + 1] = g + amount * (gray - g);
-                data[i + 2] = b + amount * (gray - b);
+                let value = (rf * Math.pow(r, gamma) + gf * Math.pow(g, gamma) + bf * Math.pow(b, gamma)) * f;
+                value = Math.max(0, Math.min(255, Math.round(value * 255)));
+
+                data[i] = value;
+                data[i + 1] = value;
+                data[i + 2] = value;
                 // Alpha 通道保持不变
             }
 
@@ -95,7 +103,7 @@
 
         draw() {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.drawImage(this.baseModel, 0, 0);
+            // this.ctx.drawImage(this.baseModel, 0, 0);
 
             for (const layer of this.layers) {
                 this.ctx.drawImage(layer, 0, 0);
