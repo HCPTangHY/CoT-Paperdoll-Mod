@@ -4,7 +4,7 @@
     <<run console.log($(".locimgcontainer"))>>
     <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform: scale(1.75);transform-origin: top left;" width="512px" height="512px"></canvas>
     <<script>>
-        $(document).on(":passageend", () => {
+        $(document).one(":passageend", () => {
             (async function() {
                 const canvas = document.getElementById("paperdollPC-canvas");
                 let paperdoll = await setup.paperdollPC(canvas)
