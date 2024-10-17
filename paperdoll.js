@@ -14,23 +14,30 @@ setup.paperdollPC = async function(canvas) {
     let p = new PaperDollSystem(canvas);
 
     // 加载人模
-    await p.loadBaseModel('res/bodynoarm.png');
+    await p.loadBaseModel('res/body/basenoarms.png');
 
     // 开始图层加载
     // 后发
-    await p.loadLayer('res/bhair.png', '#F1C232');
+    // await p.loadLayer('res/bhair.png', '#F1C232');
     // 身体(无手)
-    await p.loadLayer('res/bodynoarm.png');
-    // 头
-    await p.loadLayer('res/head.png');
-    // 前发
-    await p.loadLayer('res/fhair.png', '#F1C232');
+    await p.loadLayer('res/body/basenoarms.png');
+
     // 下衣
-    await p.loadLayer('res/trousers.png', '#FFFF00');
+    // await p.loadLayer('res/trousers.png', '#FFFF00');
     // 手
-    await p.loadLayer('res/arms.png');
+    await p.loadLayer('res/body/arms.png');
+
+    if (V.pc.has_part("penis")) {
+        await p.loadLayer(V.pc.virgin() ? `res/body/penis/penis_virgin${Math.floor(V.pc['penis size']/200)-2}.png` : `res/body/penis/penis${Math.floor(V.pc['penis size']/200)-2}.png`);
+    } else if (V.pc.has_part("breasts")) {
+        await p.loadLayer(`res/body/breasts/breasts${Math.floor(V.pc['breast size']/200)}.png`)
+    }
+    // 头
+    await p.loadLayer('res/body/basehead.png');
+    // 前发
+    // await p.loadLayer('res/fhair.png', '#F1C232');
     // 上衣
-    await p.loadLayer('res/tshirt.png', '#FFA500')
+    // await p.loadLayer('res/tshirt.png', '#FFA500')
 
     setTimeout(function() {
         console.log('All layers loaded');

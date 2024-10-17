@@ -74,29 +74,48 @@
             return canvas;
         }
 
-        colorLayer(img, hexColor) {
+        cutout(img, color) {
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = img.width;
             tempCanvas.height = img.height;
 
+            // let sw = img.width;
+            // let sh = img.height;
+            // tempCtx.clearRect(0, 0, sw, sh);
+            // // Fill with target color
+            tempCtx.globalCompositeOperation = 'source-over';
+            tempCtx.fillStyle = color;
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            tempCtx.globalCompositeOperation = 'destination-in';
             tempCtx.drawImage(img, 0, 0);
-            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-            const data = imageData.data;
+            console.log(tempCanvas.toDataURL('image/png', 1))
+            return (tempCanvas, tempCtx);
+        }
 
-            const r = parseInt(hexColor.substr(1, 2), 16);
-            const g = parseInt(hexColor.substr(3, 2), 16);
-            const b = parseInt(hexColor.substr(5, 2), 16);
+        colorLayer(img, hexColor) {
+            let tempCanvas = document.createElement('canvas');
+            let tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
 
-            for (let i = 0; i < data.length; i += 4) {
-                const gray = data[i]; // Assuming grayscale, we only need one channel
-                data[i] = (gray / 255) * r;
-                data[i + 1] = (gray / 255) * g;
-                data[i + 2] = (gray / 255) * b;
-                // Alpha channel remains unchanged
-            }
+            const colorCanvas = document.createElement('canvas');
+            const colorCtx = colorCanvas.getContext('2d');
+            colorCanvas.width = img.width;
+            colorCanvas.height = img.height;
 
-            tempCtx.putImageData(imageData, 0, 0);
+            colorCtx.globalCompositeOperation = 'source-over';
+            colorCtx.fillStyle = hexColor;
+            colorCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            colorCtx.globalCompositeOperation = 'destination-in';
+            colorCtx.drawImage(img, 0, 0);
+
+            tempCtx.drawImage(colorCanvas, 0, 0);
+            tempCtx.globalCompositeOperation = 'hard-light';
+            tempCtx.drawImage(img, 0, 0);
+
             return tempCanvas;
         }
 
