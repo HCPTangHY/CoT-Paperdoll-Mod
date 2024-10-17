@@ -6,19 +6,9 @@
     <<script>>
         $(document).on(":passageend", () => {
             (async function() {
-                $(".locimgcontainer").prepend("<canvas id='paperdollPC-canvas' style='left: -5px;position: absolute;transform: scale(1.75);transform-origin: top left;' width='512px' height='512px'></canvas>");
                 const canvas = document.getElementById("paperdollPC-canvas");
-                await Promise.all([setup.paperdollPC(canvas)]).then((paperdoll) => {
-                    console.log(paperdoll);
-                    paperdoll = paperdoll[0];
-                    paperdoll.draw();
-                    output.append(paperdoll.canvas);
-                });
+                let paperdoll = await setup.paperdollPC(canvas)
             })();
         });
-        // (async () => {
-        //     let paperdoll = await setup.paperdollPC();
-        //     console.log(paperdoll);
-        // })();
     <</script>>
 <</widget>>

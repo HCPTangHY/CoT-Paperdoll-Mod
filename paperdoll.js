@@ -17,27 +17,24 @@ setup.paperdollPC = async function(canvas) {
     await p.loadBaseModel('res/bodynoarm.png');
 
     // 开始图层加载
-    const layerPromises = [
-        // 后发
-        p.loadLayer('res/bhair.png', '#F1C232'),
-        // 身体(无手)
-        p.loadLayer('res/bodynoarm.png'),
-        // 头
-        p.loadLayer('res/head.png'),
-        // 前发
-        p.loadLayer('res/fhair.png', '#F1C232'),
-        // 下衣
-        p.loadLayer('res/trousers.png', '#FFFF00'),
-        // 手
-        p.loadLayer('res/arms.png'),
-        // 上衣
-        p.loadLayer('res/tshirt.png', '#FFA500')
-    ];
+    // 后发
+    await p.loadLayer('res/bhair.png', '#F1C232');
+    // 身体(无手)
+    await p.loadLayer('res/bodynoarm.png');
+    // 头
+    await p.loadLayer('res/head.png');
+    // 前发
+    await p.loadLayer('res/fhair.png', '#F1C232');
+    // 下衣
+    await p.loadLayer('res/trousers.png', '#FFFF00');
+    // 手
+    await p.loadLayer('res/arms.png');
+    // 上衣
+    await p.loadLayer('res/tshirt.png', '#FFA500')
 
-    // 等待所有的 loadLayer 操作完成
-    await Promise.all(layerPromises);
-    // 绘制
-    p.draw();
-    // window.paperdollPC = p;
+    setTimeout(function() {
+        console.log('All layers loaded');
+        p.draw()
+    }, 50);
     return p;
 }
