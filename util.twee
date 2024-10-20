@@ -7,7 +7,7 @@
         $(document).one(":passageend", () => {
             (async function() {
                 const canvas = document.getElementById("paperdollPC-canvas");
-                let paperdoll = await setup.paperdollPC(canvas)
+                let paperdoll = await setup.Paperdoll.paperdollPC(canvas)
             })();
         });
     <</script>>
