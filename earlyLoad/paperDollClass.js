@@ -8,6 +8,7 @@
             }
             this.ctx = this.canvas.getContext('2d');
             this.layers = [];
+            this.hairMask = null;
         }
 
         async init() {
@@ -16,30 +17,84 @@
 
         async loadBaseModel(src) {
             const img = new Image();
+            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
             img.onload = () => {
                 this.canvas.width = img.width;
                 this.canvas.height = img.height;
                 this.baseModel = img;
             };
-            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
+            console.log("Loading base model " + this.canvas.width)
         }
 
-        async loadLayer(src, color = "") {
+        async loadLayer(src, color = "", type = "") {
             const img = new Image();
             img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
             return new Promise((resolve) => {
                 img.onload = () => {
-                    console.log("Layer loaded" + src)
+                    console.log("Layer loaded " + src)
                     if (color === "") {
                         this.layers.push(img);
                     } else {
+                        let mode = "hard-light";
+                        if (type === "skin") {
+                            mode = "multiply";
+                        }
                         const desaturatedImg = this.desaturateImage(img);
-                        const coloredLayer = this.colorLayer(desaturatedImg, color);
-                        this.layers.push(coloredLayer);
+                        const coloredLayer = this.colorLayer(type === "skin" ? img : desaturatedImg, color, mode);
+                        if (type === "hair") {
+                            this.layers.push(this.hairMaskDraw(coloredLayer));
+                        } else {
+                            this.layers.push(coloredLayer);
+                        }
                     }
                 };
                 resolve(true);
             });
+        }
+
+        async loadHairMask(src) {
+            const img = new Image();
+            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
+            img.onload = () => {
+                this.hairMaskUpdate(img);
+                console.log('hair mask loaded')
+            };
+        }
+
+        hairMaskUpdate(img) {
+            let tempCanvas = document.createElement('canvas');
+            let tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+
+            if (this.hairMask === null) {
+                this.hairMask = document.createElement('canvas');
+                this.hairMask.width = img.width;
+                this.hairMask.height = img.height;
+                tempCtx.fillStyle = "#FFFFFF";
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            } else {
+                tempCtx.drawImage(this.hairMask, 0, 0)
+            }
+            tempCtx.globalCompositeOperation = "destination-in";
+            tempCtx.drawImage(img, 0, 0);
+            console.log(tempCanvas.toDataURL('image/png', 1));
+
+            this.hairMask.getContext('2d').drawImage(tempCanvas, 0, 0);
+            console.log(this.hairMask.toDataURL('image/png', 1));
+        }
+        hairMaskDraw(img) {
+            let tempCanvas = document.createElement('canvas');
+            let tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+
+            tempCtx.drawImage(img, 0, 0)
+            tempCtx.globalCompositeOperation = "destination-in";
+            if (this.hairMask !== null) {
+                tempCtx.drawImage(this.hairMask, 0, 0);
+            }
+            return tempCanvas;
         }
 
         desaturateImage(img, params = [2, 1, 1, 1, 1]) {
@@ -74,27 +129,7 @@
             return canvas;
         }
 
-        cutout(img, color) {
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = img.width;
-            tempCanvas.height = img.height;
-
-            // let sw = img.width;
-            // let sh = img.height;
-            // tempCtx.clearRect(0, 0, sw, sh);
-            // // Fill with target color
-            tempCtx.globalCompositeOperation = 'source-over';
-            tempCtx.fillStyle = color;
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-            tempCtx.globalCompositeOperation = 'destination-in';
-            tempCtx.drawImage(img, 0, 0);
-            console.log(tempCanvas.toDataURL('image/png', 1))
-            return (tempCanvas, tempCtx);
-        }
-
-        colorLayer(img, hexColor) {
+        colorLayer(img, hexColor, mode, alpha = 1) {
             let tempCanvas = document.createElement('canvas');
             let tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = img.width;
@@ -107,13 +142,14 @@
 
             colorCtx.globalCompositeOperation = 'source-over';
             colorCtx.fillStyle = hexColor;
+            colorCtx.globalAlpha = alpha;
             colorCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
             colorCtx.globalCompositeOperation = 'destination-in';
             colorCtx.drawImage(img, 0, 0);
 
             tempCtx.drawImage(colorCanvas, 0, 0);
-            tempCtx.globalCompositeOperation = 'hard-light';
+            tempCtx.globalCompositeOperation = mode;
             tempCtx.drawImage(img, 0, 0);
 
             return tempCanvas;
@@ -125,6 +161,7 @@
                 this.ctx.drawImage(layer, 0, 0);
             }
         }
+
     }
     window.PaperDollSystem = PaperDollSystem;
 })();

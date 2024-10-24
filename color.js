@@ -1,5 +1,16 @@
-const haie_colors = { "blonde": "#faf0be", "pale blonde": "#fffbe8", "dirty blonde": "#dfc393", "strawberry blonde": "#B37A5B", "red": "#ff0000", "dark red": "#8b0000", "light brown": "#B5651D", "brown": "#a52a2a", "dark brown": "#654321", "black": "#000000", "raven": "#6F747B" }
-
+const hair_colors = { "blonde": "#faf0be", "pale blonde": "#fffbe8", "dirty blonde": "#dfc393", "strawberry blonde": "#B37A5B", "red": "#ff0000", "dark red": "#8b0000", "light brown": "#B5651D", "brown": "#a52a2a", "dark brown": "#654321", "black": "#000000", "raven": "#6F747B" }
+const skin_colors = {
+    "pale": "#FAE7DA",
+    "fair": "#FAE7DA",
+    "olive": "#D09A50",
+    "beige": "#f0cbaf",
+    "gold-beige": "#fac8a2",
+    "tan": "#C68642",
+    "light brown": "#A17041",
+    "brown": "#b87c4d",
+    "dark brown": "#63301e",
+    "deep brown": "#4A3728"
+};
 const more_color = {
     "alice blue": "#F0F8FF",
     "antique white": "#FAEBD7",
@@ -148,5 +159,6 @@ const more_color = {
 
 
 
-Object.assign(setup.color_table, haie_colors)
+Object.assign(setup.color_table, hair_colors)
+setup.skin_color_table = skin_colors;
 Object.assign(setup.color_table, more_color)
