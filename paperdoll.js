@@ -16,7 +16,7 @@ setup.Paperdoll.checkImgExists = async function(src) {
 }
 
 setup.Paperdoll.checkSubsExists = async function(imgPath) {
-    return setup.Paperdoll.checkImgExists(`${imgPath}_full_gray.png`) || setup.Paperdoll.checkImgExists(`${imgPath}_left_gray.png`) || setup.Paperdoll.checkImgExists(`${imgPath}_right_gray.png`) || setup.Paperdoll.checkImgExists(`${imgPath}_full.png`) || setup.Paperdoll.checkImgExists(`${imgPath}_left.png`) || setup.Paperdoll.checkImgExists(`${imgPath}_right.png`);
+    return await setup.Paperdoll.checkImgExists(`${imgPath}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_right_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_full.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_left.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_right.png`);
 }
 
 setup.Paperdoll.colorConvert = function(color) {
@@ -79,7 +79,7 @@ setup.Paperdoll.clotheDiffsLayer = async function(clothe, imgPath, mainColor, bo
 setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes) {
     for (let i = 0; i < clothes.length; i++) {
         let citem = setup.clothes[clothes[i].item];
-        let imgPath = `res/paperdoll/clothes/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
+        let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
         let mainColor = null;
         if (clothes[i].subs['color'] || clothes[i].subs['color1']) {
             mainColor = setup.Paperdoll.colorConvert(clothes[i].subs['color']) || setup.Paperdoll.colorConvert(clothes[i].subs['color1']);
@@ -108,11 +108,11 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
 setup.Paperdoll.paperdollPC = async function(canvas) {
     window.breastType = ""
     window.hoodState = ""
-    const PCLayers = {
+    let PCLayers = {
         // 后发
         "backhair": {
             layer: -10,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 if (window.hoodState === "up") { return }
                 await p.loadLayer(`${baseURL}hair/back/${V.pc['hair style'].replace(/ /g, '_')}/${V.pc['hair length'].replace(/ /g, '_')}.png`, setup.Paperdoll.colorConvert(V.pc['hair color']), 'hair');
             }
@@ -120,51 +120,50 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 身体(无手)
         "bodynoarms": {
             layer: 0,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 await p.loadLayer(`${baseURL}body/basenoarms-${V.pc.has_part("penis")? "m" : "f"}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
             }
         },
         // 头
         "head": {
             layer: 10,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 await p.loadLayer(`${baseURL}body/basehead.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                let dmarkSlot = { "chin": null, "eyebrows": null, "eyeslashes": null, "eyes": null, "face": null, "lips": null, "mouth": null, "nose": null, "mouse": null };
+                let dmarkSlot = { "chin": null, "face": null, "eyebrows": null, "eyes": null, "lips": null, "mouth": null, "nose": null };
                 for (let dmark of V.pc.distinguishing_marks) {
                     let dmarkobj = setup.distinguishing_marks[dmark];
                     dmarkSlot[dmarkobj.slot] = dmark;
                 }
                 for (let i in dmarkSlot) {
-                    if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmarks/${dmarkSlot[i]}.png`)) {
+                    if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmarks/${dmarkSlot[i].replace(/ /g, '_')}.png`)) {
                         if (i === "eyebrows") {
-                            await p.loadLayer(`${baseURL}face/dmarks/${dmarkSlot[i]}.png`, setup.Paperdoll.colorConvert(V.pc['hair color']));
+                            await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.Paperdoll.colorConvert(V.pc['hair color']));
                         } else {
-                            await p.loadLayer(`${baseURL}face/dmarks/${dmarkSlot[i]}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
+                            await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
+                        }
+                        if (i === "eyes") {
+                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.color_table[V.pc['eye color']]);
                         }
                     } else {
                         await p.loadLayer(`${baseURL}face/base${i}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
+                        if (i === "eyes") {
+                            await p.loadLayer(`${baseURL}face/baseiris.png`, setup.color_table[V.pc['eye color']]);
+                        }
                     }
                 }
-            }
-        },
-        // 眼睛
-        "eyes": {
-            layer: 20,
-            load: async function(p, clotheMap) {
-                await p.loadLayer(`${baseURL}face/baseeyes.png`, setup.Paperdoll.colorConvert(V.pc['eye color']));
             }
         },
         // 左手
         "leftarm": {
             layer: 30,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 await p.loadLayer(`${baseURL}body/leftarm.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
             }
         },
         // 左手衣服层
         "leftHandClothes": {
             layer: 40,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 let leftHandClothes = clotheMap.leftHandClothes || [];
                 for (let i = 0; i < leftHandClothes.length; i++) {
                     if (leftHandClothes[i].color) await p.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color);
@@ -175,7 +174,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 阴茎和乳房
         "penisbreasts": {
             layer: 50,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 if (V.pc.has_part("penis") && V.pc.is_part_visible('penis')) {
                     await p.loadLayer(V.pc.virgin() ? `${baseURL}body/penis/penis_virgin${Math.floor(V.pc['penis size']/200)-2}.png` : `${baseURL}body/penis/penis${Math.floor(V.pc['penis size']/200)}${V.pc['penis type']=="uncircumcised"?"_uncircumcised":""}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                 } else if (V.pc.has_part("breasts") && V.pc.is_part_visible('nipples')) {
@@ -193,7 +192,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 身体衣服层
         "bodyClothes": {
             layer: 60,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 let bodyClothes = clotheMap.bodyClothes || [];
                 for (let i = 0; i < bodyClothes.length; i++) {
                     if (bodyClothes[i].color) await p.loadLayer(bodyClothes[i].path, bodyClothes[i].color);
@@ -204,14 +203,14 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 右手
         "rightarm": {
             layer: 70,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 await p.loadLayer(`${baseURL}body/rightarm.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
             }
         },
         // 右手衣服层
         "rightHandClothes": {
             layer: 80,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 let rightHandClothes = clotheMap.rightHandClothes || [];
                 for (let i = 0; i < rightHandClothes.length; i++) {
                     if (rightHandClothes[i].color) await p.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color);
@@ -222,7 +221,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 前发
         "fronthair": {
             layer: 90,
-            load: async function(p, clotheMap) {
+            load: async function() {
                 let frontHair = V.pc['hair style'].replace(/ /g, '_') + '/' + V.pc['hair length'].replace(/ /g, '_') + '.png';
                 if (await setup.Paperdoll.checkImgExists(`${baseURL}hair/front/${frontHair}`)) {
                     await p.loadLayer(`${baseURL}hair/front/${frontHair}`, setup.Paperdoll.colorConvert(V.pc['hair color']), 'hair');
@@ -259,7 +258,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
 
     let layers = Object.keys(PCLayers).sort((a, b) => PCLayers[a].layer - PCLayers[b].layer);
     for (let layer of layers) {
-        await PCLayers[layer].load(p, clotheMap);
+        await PCLayers[layer].load();
     }
 
     // 前景替换插入点
