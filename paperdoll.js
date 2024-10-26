@@ -129,7 +129,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             layer: 10,
             load: async function() {
                 await p.loadLayer(`${baseURL}body/basehead.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                let dmarkSlot = { "chin": null, "face": null, "eyebrows": null, "eyes": null, "lips": null, "mouth": null, "nose": null };
+                let dmarkSlot = { "chin": null, "face": null, "eyebrows": null, "eyes": null, "lips": null, "nose": null };
                 for (let dmark of V.pc.distinguishing_marks) {
                     let dmarkobj = setup.distinguishing_marks[dmark];
                     dmarkSlot[dmarkobj.slot] = dmark;
@@ -142,12 +142,12 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
                             await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         }
                         if (i === "eyes") {
-                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.color_table[V.pc['eye color']]);
+                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.eye_color_table[V.pc['eye color']]);
                         }
                     } else {
                         await p.loadLayer(`${baseURL}face/base${i}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         if (i === "eyes") {
-                            await p.loadLayer(`${baseURL}face/baseiris.png`, setup.color_table[V.pc['eye color']]);
+                            await p.loadLayer(`${baseURL}face/baseiris.png`, setup.eye_color_table[V.pc['eye color']]);
                         }
                     }
                 }
@@ -264,8 +264,8 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     // 前景替换插入点
 
     function calculateScale(x) {
-        if (x <= 400) return 1.751391163229336e-12 * x * x * x * x - 8.545255633164328e-9 * x * x * x + 0.000014145710013317692 * x * x - 0.009038956747285762 * x + 3.272763107636594
-        else return 1.5
+        if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
+        else return -0.0002403846153846154 * x + 1.646153846153846
     }
 
     setTimeout(() => {
