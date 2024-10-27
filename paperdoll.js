@@ -114,7 +114,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             layer: -10,
             load: async function() {
                 if (window.hoodState === "up") { return }
-                await p.loadLayer(`${baseURL}hair/back/${V.pc['hair style'].replace(/ /g, '_')}/${V.pc['hair length'].replace(/ /g, '_')}.png`, setup.Paperdoll.colorConvert(V.pc['hair color']), 'hair');
+                await p.loadLayer(`${baseURL}hair/back/${V.pc['hair style'].replace(/ /g, '_')}/${V.pc['hair length'].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']], 'hair');
             }
         },
         // 身体(无手)
@@ -137,7 +137,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
                 for (let i in dmarkSlot) {
                     if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmarks/${dmarkSlot[i].replace(/ /g, '_')}.png`)) {
                         if (i === "eyebrows") {
-                            await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.Paperdoll.colorConvert(V.pc['hair color']));
+                            await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']]);
                         } else {
                             await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         }
@@ -224,9 +224,9 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             load: async function() {
                 let frontHair = V.pc['hair style'].replace(/ /g, '_') + '/' + V.pc['hair length'].replace(/ /g, '_') + '.png';
                 if (await setup.Paperdoll.checkImgExists(`${baseURL}hair/front/${frontHair}`)) {
-                    await p.loadLayer(`${baseURL}hair/front/${frontHair}`, setup.Paperdoll.colorConvert(V.pc['hair color']), 'hair');
+                    await p.loadLayer(`${baseURL}hair/front/${frontHair}`, setup.hair_color_table[V.pc['hair color']], 'hair');
                 } else {
-                    await p.loadLayer(`${baseURL}hair/front/default.png`, setup.Paperdoll.colorConvert(V.pc['hair color']), 'hair');
+                    await p.loadLayer(`${baseURL}hair/front/default.png`, setup.hair_color_table[V.pc['hair color']], 'hair');
                 }
             }
         }

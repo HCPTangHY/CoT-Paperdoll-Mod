@@ -169,7 +169,7 @@ const more_color = {
 
 
 
-Object.assign(setup.color_table, hair_colors)
+setup.hair_color_table = hair_colors;
 setup.skin_color_table = skin_colors;
 setup.eye_color_table = eye_colors;
 Object.assign(setup.color_table, more_color)
