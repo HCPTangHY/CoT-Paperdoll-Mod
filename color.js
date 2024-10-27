@@ -1,4 +1,4 @@
-const hair_colors = { "blonde": "#d6af4f", "pale blonde": "#d4cd67", "dirty blonde": "#b0977d", "strawberry blonde": "#bc6b42", "red": "#8d0100", "dark red": "#590000", "light brown": "#976441", "brown": "#6c3c19", "dark brown": "#46231c", "black": "#453b2c", "raven": "#212333", 'bleach blonde': "#cdc6ae", 'fire red': "#a93518", 'sunset ombre': "#da5721", 'cosmic yellow': "#bbcd6d", 'poison green': "#6f884e", 'aquamarine': "#1d328b", 'electric blue': "#85bfa9", 'lagoon blue': "#4e78b8", 'candyfloss pink': "#e8b0bb", 'lunar lavender': "#7976cb", 'punky purple': "#4b307a", 'midnight black': "#2d2244", 'snow white': "#e2e4ee" }
+const hair_colors = { "blonde": "#efcd2c", "pale blonde": "#e2d758", "dirty blonde": "#e19a0c", "dark blonde": "#cbb33f", "strawberry blonde": "#e2985c", "red": "#d1030a", "dark red": "#a80038", "light brown": "#a77016", "brown": "#6d3c18", "dark brown": "#451801", "black": "#23211f", "raven": "#150532", 'bleach blonde': "#dbd5b2", 'fire red': "#f43e01", 'sunset ombre': "#fc8605", 'cosmic yellow': "#8fb50f", 'poison green': "#0f8217", 'aquamarine': "#0036a7", 'electric blue': "#13bba1", 'lagoon blue': "#01acee", 'candyfloss pink': "#ffc3e8", 'lunar lavender': "#d49efb", 'punky purple': "#792cb9", 'midnight black': "#440066", 'snow white': "#e9fdff" }
 const skin_colors = {
     "pale": "#FFFFFF",
     "fair": "#FAE7DA",
@@ -12,14 +12,14 @@ const skin_colors = {
     "deep brown": "#4A3728"
 };
 const eye_colors = {
-    'blue': "#2475d7",
+    'blue': "#008ffb",
     'green': "#339900",
-    'hazel': "#a2673e",
-    'light brown': "#bd9f00",
-    'brown': "734d13",
-    'dark brown': "#62463e",
-    'gray': "#b1c0d9",
-    'black': "#1a1531"
+    'hazel': "#bd9b00",
+    'light brown': "#bd8600",
+    'brown': "712600",
+    'dark brown': "#520000",
+    'gray': "#99a1b1",
+    'black': "#443e5e"
 }
 const more_color = {
     "alice blue": "#F0F8FF",
@@ -169,7 +169,7 @@ const more_color = {
 
 
 
-setup.hair_color_table = hair_colors;
+setup.hair_color_table = hair_colors
 setup.skin_color_table = skin_colors;
 setup.eye_color_table = eye_colors;
 Object.assign(setup.color_table, more_color)
