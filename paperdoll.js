@@ -64,19 +64,33 @@ setup.Paperdoll.clotheDiffsLayer = async function(clothe, imgPath, mainColor, bo
             }
         }
     }
-    if (!V.pc.is_part_visible("breasts") && V.pc.outermost_covering('breasts').item == V.pc.innermost_covering('breasts').item && V.pc.outermost_covering('breasts').item == clothe.item) {
-        if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast${Math.floor(V.pc['breast size']/200)}`)) {
-            [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}breast${Math.floor(V.pc['breast size']/200)}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
-            window.breastType = "num"
-        } else if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast`)) {
-            [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}breast_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
-            window.breastType = "dafault"
-        }
+    if (window.breastType) {
+        [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):""}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
     }
     return [bodyClothes, leftHandClothes, rightHandClothes];
 }
 
 setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes) {
+    window.breastType = null
+    let breastType = []
+    for (let i = 0; i < clothes.length; i++) {
+        let citem = setup.clothes[clothes[i].item];
+        if (citem.covers.indexOf("nipples") === -1) { continue }
+        breastType[i] = null
+        let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
+        if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast${Math.floor(V.pc['breast size']/200)}`)) {
+            breastType[i] = "num"
+        } else if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast`)) {
+            breastType[i] = "dafault"
+        }
+    }
+    let nowBreastType = breastType[0] || null
+    for (let i = 1; i < clothes.length; i++) {
+        if (breastType[i] != nowBreastType) {
+            nowBreastType = null
+        }
+    }
+    window.breastType = nowBreastType
     for (let i = 0; i < clothes.length; i++) {
         let citem = setup.clothes[clothes[i].item];
         let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
@@ -106,7 +120,7 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
 }
 
 setup.Paperdoll.paperdollPC = async function(canvas) {
-    window.breastType = ""
+    window.breastType = null
     window.hoodState = ""
     let PCLayers = {
         // 后发
@@ -136,18 +150,26 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
                 }
                 for (let i in dmarkSlot) {
                     if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmarks/${dmarkSlot[i].replace(/ /g, '_')}.png`)) {
+                        if (i === "eyes") {
+                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_eyes.png`);
+                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.eye_color_table[V.pc['eye color']]);
+                            continue;
+                        }
                         if (i === "eyebrows") {
                             await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']]);
                         } else {
                             await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         }
-                        if (i === "eyes") {
-                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.eye_color_table[V.pc['eye color']]);
-                        }
                     } else {
-                        await p.loadLayer(`${baseURL}face/base${i}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         if (i === "eyes") {
+                            await p.loadLayer(`${baseURL}face/baseeyes.png`);
                             await p.loadLayer(`${baseURL}face/baseiris.png`, setup.eye_color_table[V.pc['eye color']]);
+                            continue;
+                        }
+                        if (i === "eyebrows") {
+                            await p.loadLayer(`${baseURL}face/base${i}.png`, setup.hair_color_table[V.pc['hair color']]);
+                        } else {
+                            await p.loadLayer(`${baseURL}face/base${i}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         }
                     }
                 }
@@ -178,14 +200,10 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
                 if (V.pc.has_part("penis") && V.pc.is_part_visible('penis')) {
                     await p.loadLayer(V.pc.virgin() ? `${baseURL}body/penis/penis_virgin${Math.floor(V.pc['penis size']/200)-2}.png` : `${baseURL}body/penis/penis${Math.floor(V.pc['penis size']/200)}${V.pc['penis type']=="uncircumcised"?"_uncircumcised":""}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                 } else if (V.pc.has_part("breasts") && V.pc.is_part_visible('nipples')) {
-                    switch (window.breastType) {
-                        case "num":
-                            await p.loadLayer(`${baseURL}body/breasts/breast${Math.floor(V.pc['breast size']/200)}_clothed.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
-                        case "dafault":
-                            await p.loadLayer(`${baseURL}body/breasts/breast3_clothed.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
-                        default:
-                            await p.loadLayer(`${baseURL}body/breasts/breast${Math.floor(V.pc['breast size']/200)}.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
-                    }
+                    await p.loadLayer(`${baseURL}body/breasts/breast${Math.floor(V.pc['breast size']/200)}.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
+                }
+                if (window.breastType) {
+                    await p.loadLayer(`${baseURL}body/breasts/breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):"3"}_clothed.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
                 }
             }
         },
@@ -272,6 +290,11 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         console.log('All layers loaded');
         p.draw();
         canvas.style.transform = `scale(${calculateScale(p.canvas.height)})`;
+        if (p.canvas.height <= 256) {
+            canvas.style.imageRendering = "pixelated";
+            canvas.style.imageRendering = "crisp-edges";
+            canvas.style.msInterpolationMode = "nearest-neighbor";
+        }
     }, 50);
 
     return p;

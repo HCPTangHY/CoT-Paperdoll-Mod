@@ -2,7 +2,7 @@
 
 <<widget "PaperdollPC">>
     <<run console.log($(".locimgcontainer"))>>
-    <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform-origin: top left;image-rendering: pixelated;image-rendering: crisp-edges;-ms-interpolation-mode: nearest-neighbor;"></canvas>
+    <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform-origin: top left;"></canvas>
     <<script>>
         $(document).one(":passageend", () => {
             (async function() {

@@ -16,8 +16,10 @@
         }
 
         async loadBaseModel(src) {
+            src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src) || "";
+            if (src === "") { return; }
             const img = new Image();
-            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
+            img.src = src;
             img.onload = () => {
                 this.canvas.width = img.width;
                 this.canvas.height = img.height;
@@ -27,8 +29,10 @@
         }
 
         async loadLayer(src, color = "", type = "") {
+            src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src) || "";
+            if (src === "") { return; }
             const img = new Image();
-            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
+            img.src = src;
             return new Promise((resolve) => {
                 img.onload = () => {
                     console.log("Layer loaded " + src)
@@ -53,8 +57,10 @@
         }
 
         async loadHairMask(src) {
+            src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src) || "";
+            if (src === "") { return; }
             const img = new Image();
-            img.src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src);
+            img.src = src;
             img.onload = () => {
                 this.hairMaskUpdate(img);
                 console.log('hair mask loaded')
