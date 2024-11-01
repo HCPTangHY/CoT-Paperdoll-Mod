@@ -1,5 +1,49 @@
 if (!("Paperdoll" in setup)) setup.Paperdoll = {};
 
+setup.Paperdoll.clothesIndex = {
+    // layer层数，order顺序（1：正序，-1：倒序）
+    'outerwear': { layer: 10, order: 1 },
+    'mainbody': { layer: 5, order: 1 },
+    // 'dresses': { layer: 5, order: 1 },
+    'bodysuits': { layer: 4, order: 1 },
+    // 'tops': { layer: 5, order: 1 },
+    // 'bottoms': { layer: 5, order: 1 },
+    'footwear': { layer: 4, order: 1 },
+    'underwear': { layer: 1, order: 1 },
+    'swimwear': { layer: 2, order: 1 },
+    'accessories': { layer: 3, order: 1 },
+    // 'masks': { layer: 5, order: 1 },
+    'bags': { layer: 10, order: 1 },
+    sortClothes: function(clothes) {
+        let map = { 'mainbody': [] };
+        for (let i = 0; i < clothes.length; i++) {
+            let citem = setup.clothes[clothes[i].item];
+            if (['dresses', 'tops', 'bottoms', 'masks'].indexOf(citem.category) !== -1) {
+                map['mainbody'].push(clothes[i]);
+                continue;
+            }
+            if (citem.category in map) {
+                map[citem.category].push(clothes[i]);
+            } else {
+                map[citem.category] = [clothes[i]];
+            }
+        }
+        let result = [];
+        for (let cat of Object.keys(map).sort((a, b) => setup.Paperdoll.clothesIndex[a].layer - setup.Paperdoll.clothesIndex[b].layer)) {
+            let clothes = map[cat];
+            let order = this[cat].order;
+            console.log(clothes)
+            if (order === 1) {
+                clothes.sort((a, b) => setup.clothes[a.item].layer - setup.clothes[b.item].layer);
+            } else {
+                clothes.sort((a, b) => setup.clothes[b.item].layer - setup.clothes[a.item].layer);
+            }
+            result.push(...clothes);
+        }
+        return result;
+    }
+}
+
 setup.Paperdoll.createCanvas = function(id) {
     let canvas = document.createElement('canvas');
     canvas.id = id;
@@ -70,7 +114,7 @@ setup.Paperdoll.clotheDiffsLayer = async function(clothe, imgPath, mainColor, bo
     return [bodyClothes, leftHandClothes, rightHandClothes];
 }
 
-setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes) {
+setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
     window.breastType = null
     let breastType = []
     for (let i = 0; i < clothes.length; i++) {
@@ -89,8 +133,10 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
         if (breastType[i] != nowBreastType) {
             nowBreastType = null
         }
+
     }
     window.breastType = nowBreastType
+    clothes = setup.Paperdoll.clothesIndex.sortClothes(clothes);
     for (let i = 0; i < clothes.length; i++) {
         let citem = setup.clothes[clothes[i].item];
         let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
@@ -115,14 +161,29 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
         if (await setup.Paperdoll.checkImgExists(`${imgPath}mask.png`)) {
             await paperdoll.loadHairMask(`${imgPath}mask.png`);
         }
+        if (setup.Paperdoll.checkImgExists(`${imgPath}back_gray.png`)) {
+            backClothes.push({ "path": `${imgPath}back_gray.png`, "color": mainColor });
+        } else if (setup.Paperdoll.checkImgExists(`${imgPath}back.png`)) {
+            backClothes.push({ "path": `${imgPath}back.png` });
+        }
     }
-    return [paperdoll, bodyClothes, leftHandClothes, rightHandClothes];
+    return [paperdoll, bodyClothes, leftHandClothes, rightHandClothes, backClothes];
 }
 
 setup.Paperdoll.paperdollPC = async function(canvas) {
     window.breastType = null
     window.hoodState = ""
     let PCLayers = {
+        // 衣服后背
+        "backClothes": {
+            layer: -20,
+            load: async function() {
+                for (let i = 0; i < backClothes.length; i++) {
+                    if (backClothes[i].color) await p.loadLayer(backClothes[i].path, backClothes[i].color);
+                    else await p.loadLayer(backClothes[i].path);
+                }
+            }
+        },
         // 后发
         "backhair": {
             layer: -10,
@@ -186,7 +247,6 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         "leftHandClothes": {
             layer: 40,
             load: async function() {
-                let leftHandClothes = clotheMap.leftHandClothes || [];
                 for (let i = 0; i < leftHandClothes.length; i++) {
                     if (leftHandClothes[i].color) await p.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color);
                     else await p.loadLayer(leftHandClothes[i].path);
@@ -211,7 +271,6 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         "bodyClothes": {
             layer: 60,
             load: async function() {
-                let bodyClothes = clotheMap.bodyClothes || [];
                 for (let i = 0; i < bodyClothes.length; i++) {
                     if (bodyClothes[i].color) await p.loadLayer(bodyClothes[i].path, bodyClothes[i].color);
                     else await p.loadLayer(bodyClothes[i].path);
@@ -229,7 +288,6 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         "rightHandClothes": {
             layer: 80,
             load: async function() {
-                let rightHandClothes = clotheMap.rightHandClothes || [];
                 for (let i = 0; i < rightHandClothes.length; i++) {
                     if (rightHandClothes[i].color) await p.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color);
                     else await p.loadLayer(rightHandClothes[i].path);
@@ -257,17 +315,11 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
 
     V.pc.get_clothingItems_classes();
     let clothes = V.pc.clothes;
-    clothes.sort((a, b) => setup.clothes[a.item].layer - setup.clothes[b.item].layer);
     let leftHandClothes = [];
     let rightHandClothes = [];
     let bodyClothes = [];
-    [p, bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheLayers(p, clothes, bodyClothes, leftHandClothes, rightHandClothes);
-
-    const clotheMap = {
-        "bodyClothes": bodyClothes,
-        "leftHandClothes": leftHandClothes,
-        "rightHandClothes": rightHandClothes
-    }
+    let backClothes = [];
+    [p, bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheLayers(p, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
 
     // 其他图层插入点
     // Object.assign(PCLayers, {xxxx});
