@@ -1,15 +1,22 @@
 {
     "name": "PaperdollFramework",
-    "version": "0.1.4",
+    "version": "0.2.0",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
     "scriptFileList_inject_early": [
-        "earlyLoad/paperDollClass.js"
+        "early/paperDollClass.js",
+        "early/GameOriginalImagePack.js"
+    ],
+    "scriptFileList_preload": [
+        "preload/preload.js"
     ],
     "tweeFileList": [],
     "imgFileList": [],
     "additionFile": [],
+    "additionDir": [
+        "res/paperdoll/"
+    ],
     "addonPlugin": [{
         "modName": "TweeReplacer",
         "addonName": "TweeReplacerAddon",
@@ -32,11 +39,6 @@
             "replace": "<img @src=\"_nodeimg\" width=\"75px\">",
             "all": true
         }]
-    }, {
-        "modName": "ImageLoaderHook",
-        "addonName": "ImageLoaderAddon",
-        "modVersion": "^2.12.1",
-        "params": []
     }],
     "dependenceInfo": [{
         "modName": "TweeReplacer",
@@ -45,7 +47,7 @@
         "modName": "ModLoader",
         "version": "^2.16.3"
     }, {
-        "modName": "ModLoader ImageLoaderHookCore",
-        "version": "^2.12.1"
+        "modName": "ImageLoaderHook",
+        "version": "^2.16.0"
     }]
 }
