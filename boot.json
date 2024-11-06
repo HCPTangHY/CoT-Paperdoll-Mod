@@ -5,8 +5,8 @@
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
     "scriptFileList_inject_early": [
-        "early/paperDollClass.js",
-        "early/GameOriginalImagePack.js"
+        "early/PaperdollClass.js",
+        "early/PaperdollOriginalImagePack.js"
     ],
     "scriptFileList_preload": [
         "preload/preload.js"
