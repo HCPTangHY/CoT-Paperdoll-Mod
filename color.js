@@ -21,6 +21,40 @@ const eye_colors = {
     'gray': "#99a1b1",
     'black': "#443e5e"
 }
+const clothe_colors = {
+    "white": "#FFFFFF",
+    "gray": "#B0B0B0",
+    "black": "#434343",
+    "red": "#BD2610",
+    "vermillion": "#DB2F10",
+    "dark red": "#B0003E",
+    "blue": "#6297F3",
+    "sky blue": "#B2E9FE",
+    "lake blue": "#0EE3FF", // 全新加入
+    "sapphire blue": "#1A1CFF",
+    "lilac purple": "#7626F9", // 全新加入
+    "purple": "#7C5FCB",
+    "indigo": "#3F39A7", // subs_cn_name存在，color_table不存在，非新增
+    "pink": "#FFB3D9",
+    "peach": "#E161AC",
+    "lilac": "#B065F9",
+    "green": "#22A521",
+    "mint green": "#7FFFF0",
+    "turquoise": "#38756E", // subs_cn_name存在，color_table不存在
+    "olive green": "#859000",
+    "yellow": "#FFE81E",
+    "orange": "#FE842D",
+    "sunset orange": "#FD4C18", // 全新加入
+    "ice blue": "#DBF8FE", // 全新加入
+    "blue grey": "#BAC8E4", // 全新加入
+    "navy blue": "#3738C7",
+    "brown": "#5F3424",
+    "milk yellow": "#FFE6A4", // 全新加入
+    "chino": "#DDCA9E", // 全新加入
+    "dark navy blue": "#1E5D90", // 全新加入
+    "light brown": "#B87B44"
+}
+
 const more_color = {
     "alice blue": "#F0F8FF",
     "antique white": "#FAEBD7",
@@ -172,4 +206,5 @@ const more_color = {
 setup.hair_color_table = hair_colors
 setup.skin_color_table = skin_colors;
 setup.eye_color_table = eye_colors;
-Object.assign(setup.color_table, more_color)
+setup.clothe_color_table = clothe_colors;
+Object.assign(setup.clothe_color_table, more_color)

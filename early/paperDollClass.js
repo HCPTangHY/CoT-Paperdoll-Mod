@@ -39,9 +39,12 @@
                     if (color === "") {
                         this.layers.push(img);
                     } else {
-                        let mode = "hard-light";
-                        if (type === "skin") {
-                            mode = "multiply";
+                        let mode = "";
+                        switch (type) {
+                            case "":
+                                mode = setup.Paperdoll.layerBlendMode['default']
+                            default:
+                                mode = setup.Paperdoll.layerBlendMode[type]
                         }
                         const desaturatedImg = this.desaturateImage(img);
                         const coloredLayer = this.colorLayer(type === "skin" ? img : desaturatedImg, color, mode);

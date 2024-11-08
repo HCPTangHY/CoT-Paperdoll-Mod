@@ -63,9 +63,11 @@ setup.Paperdoll.checkSubsExists = async function(imgPath) {
     return await setup.Paperdoll.checkImgExists(`${imgPath}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_right_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_full.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_left.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}_right.png`);
 }
 
-setup.Paperdoll.colorConvert = function(color) {
-    if (setup.color_table[color]) {
-        return setup.color_table[color];
+setup.Paperdoll.colorConvert = function(color, type = "") {
+    let colorTable = setup.color_table;
+    if (type == "clothe") { colorTable = setup.clothe_color_table }
+    if (colorTable[color]) {
+        return colorTable[color];
     } else {
         return color;
     }
@@ -102,7 +104,7 @@ setup.Paperdoll.clotheDiffsLayer = async function(clothe, imgPath, mainColor, bo
             continue;
         } else {
             if ((subName.indexOf('color') !== -1 || subName == "laces") && (await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_right_gray.png`))) {
-                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}`, setup.Paperdoll.colorConvert(clothe.subs[subName]), bodyClothes, leftHandClothes, rightHandClothes);
+                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}`, setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe"), bodyClothes, leftHandClothes, rightHandClothes);
             } else {
                 [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}/${clothe.subs[subName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
             }
@@ -142,7 +144,7 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
         let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
         let mainColor = null;
         if (clothes[i].subs['color'] || clothes[i].subs['color1']) {
-            mainColor = setup.Paperdoll.colorConvert(clothes[i].subs['color']) || setup.Paperdoll.colorConvert(clothes[i].subs['color1']);
+            mainColor = setup.Paperdoll.colorConvert(clothes[i].subs['color'], "clothe") || setup.Paperdoll.colorConvert(clothes[i].subs['color1'], "clothe");
         }
         // main
         [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
@@ -169,7 +171,12 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
     }
     return [paperdoll, bodyClothes, leftHandClothes, rightHandClothes, backClothes];
 }
-
+setup.Paperdoll.layerBlendMode = {
+    'clothes': 'hard-light',
+    'hair': 'hard-light',
+    'skin': 'multiply',
+    'default': 'hard-light'
+}
 setup.Paperdoll.paperdollPC = async function(canvas) {
     window.breastType = null
     window.hoodState = ""
@@ -179,7 +186,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             layer: -20,
             load: async function() {
                 for (let i = 0; i < backClothes.length; i++) {
-                    if (backClothes[i].color) await p.loadLayer(backClothes[i].path, backClothes[i].color);
+                    if (backClothes[i].color) await p.loadLayer(backClothes[i].path, backClothes[i].color, 'clothes');
                     else await p.loadLayer(backClothes[i].path);
                 }
             }
@@ -248,7 +255,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             layer: 40,
             load: async function() {
                 for (let i = 0; i < leftHandClothes.length; i++) {
-                    if (leftHandClothes[i].color) await p.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color);
+                    if (leftHandClothes[i].color) await p.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color, 'clothes');
                     else await p.loadLayer(leftHandClothes[i].path);
                 }
             }
@@ -272,7 +279,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             layer: 60,
             load: async function() {
                 for (let i = 0; i < bodyClothes.length; i++) {
-                    if (bodyClothes[i].color) await p.loadLayer(bodyClothes[i].path, bodyClothes[i].color);
+                    if (bodyClothes[i].color) await p.loadLayer(bodyClothes[i].path, bodyClothes[i].color, 'clothes');
                     else await p.loadLayer(bodyClothes[i].path);
                 }
             }
@@ -289,7 +296,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             layer: 80,
             load: async function() {
                 for (let i = 0; i < rightHandClothes.length; i++) {
-                    if (rightHandClothes[i].color) await p.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color);
+                    if (rightHandClothes[i].color) await p.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color, 'clothes');
                     else await p.loadLayer(rightHandClothes[i].path);
                 }
             }

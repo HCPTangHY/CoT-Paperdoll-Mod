@@ -1,6 +1,6 @@
 {
     "name": "PaperdollFramework",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
@@ -45,7 +45,7 @@
         "version": "^1.6.0"
     }, {
         "modName": "ModLoader",
-        "version": "^2.16.3"
+        "version": "^2.26.9"
     }, {
         "modName": "ImageLoaderHook",
         "version": "^2.16.0"
