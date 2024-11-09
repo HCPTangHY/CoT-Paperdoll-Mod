@@ -42,7 +42,8 @@
                         let mode = "";
                         switch (type) {
                             case "":
-                                mode = setup.Paperdoll.layerBlendMode['default']
+                                mode = setup.Paperdoll.layerBlendMode['default'];
+                                break;
                             default:
                                 mode = setup.Paperdoll.layerBlendMode[type]
                         }
