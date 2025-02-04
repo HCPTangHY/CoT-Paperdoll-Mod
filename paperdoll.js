@@ -1,27 +1,65 @@
 if (!("Paperdoll" in setup)) setup.Paperdoll = {};
+setup.Paperdoll.cache = {
+    canvasCache: new Map(),
+    maxCacheSize: 10, // 最大缓存数量
+
+    // 生成缓存key
+    generateKey: function(clothes, pc) {
+        const relevantPCData = {
+            penis: pc.has_part("penis"),
+            skin: pc['skin color'],
+            hair: pc['hair color'],
+            eye: pc['eye color'],
+            hairStyle: pc['hair style'],
+            hairLength: pc['hair length'],
+            breastSize: pc['breast size'],
+            penisSize: pc['penis size'],
+            dmarks: pc.distinguishing_marks,
+        };
+        return JSON.stringify({ clothes, pc: relevantPCData});
+    },
+
+    // 获取缓存
+    get: function(key) {
+        return this.canvasCache.get(key);
+    },
+
+    // 设置缓存
+    set: function(key, canvas) {
+        // 如果缓存已满，删除最早的缓存
+        if (this.canvasCache.size >= this.maxCacheSize) {
+            const firstKey = this.canvasCache.keys().next().value;
+            this.canvasCache.delete(firstKey);
+        }
+
+        // 创建新的canvas并复制内容
+        const cachedCanvas = document.createElement('canvas');
+        cachedCanvas.width = canvas.width;
+        cachedCanvas.height = canvas.height;
+        const ctx = cachedCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0);
+
+        this.canvasCache.set(key, cachedCanvas);
+    }
+};
 
 setup.Paperdoll.clothesIndex = {
     // layer层数，order顺序（1：正序，-1：倒序）
     'outerwear': { layer: 10, order: 1 },
-    'mainbody': { layer: 5, order: 1 },
-    // 'dresses': { layer: 5, order: 1 },
+    'dresses': { layer: 5.5, order: 1 },
     'bodysuits': { layer: 4, order: 1 },
-    // 'tops': { layer: 5, order: 1 },
-    // 'bottoms': { layer: 5, order: 1 },
+    'tops': { layer: 7, order: 1 },
+    'bottoms': { layer: 5, order: 1 },
     'footwear': { layer: 4, order: 1 },
     'underwear': { layer: 1, order: 1 },
     'swimwear': { layer: 2, order: 1 },
     'accessories': { layer: 3, order: 1 },
-    // 'masks': { layer: 5, order: 1 },
+    'masks': { layer: 8, order: 1 },
     'bags': { layer: 10, order: 1 },
     sortClothes: function(clothes) {
-        let map = { 'mainbody': [] };
+        let map = {};
         for (let i = 0; i < clothes.length; i++) {
             let citem = setup.clothes[clothes[i].item];
-            if (['dresses', 'tops', 'bottoms', 'masks'].indexOf(citem.category) !== -1) {
-                map['mainbody'].push(clothes[i]);
-                continue;
-            }
             if (citem.category in map) {
                 map[citem.category].push(clothes[i]);
             } else {
@@ -32,7 +70,6 @@ setup.Paperdoll.clothesIndex = {
         for (let cat of Object.keys(map).sort((a, b) => setup.Paperdoll.clothesIndex[a].layer - setup.Paperdoll.clothesIndex[b].layer)) {
             let clothes = map[cat];
             let order = this[cat].order;
-            console.log(clothes)
             if (order === 1) {
                 clothes.sort((a, b) => setup.clothes[a.item].layer - setup.clothes[b.item].layer);
             } else {
@@ -91,7 +128,7 @@ setup.Paperdoll.clotheBaseSubLayers = async function(imgPath, color, bodyClothes
 
 setup.Paperdoll.clotheSubLayers = async function(imgPath, color, bodyClothes, leftHandClothes, rightHandClothes) {
     [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheBaseSubLayers(imgPath, color, bodyClothes, leftHandClothes, rightHandClothes);
-    console.log(typeof bodyClothes, typeof leftHandClothes, typeof rightHandClothes);
+    if (imgPath.charAt(imgPath.length - 1) !== '/') { imgPath.slice(0,-1); }
     bodyClothes.push({ "path": `${imgPath}acc_full.png` });
     leftHandClothes.push({ "path": `${imgPath}acc_left.png` });
     rightHandClothes.push({ "path": `${imgPath}acc_right.png` });
@@ -104,7 +141,7 @@ setup.Paperdoll.clotheDiffsLayer = async function(clothe, imgPath, mainColor, bo
             continue;
         } else {
             if ((subName.indexOf('color') !== -1 || subName == "laces") && (await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_right_gray.png`))) {
-                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}`, setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe"), bodyClothes, leftHandClothes, rightHandClothes);
+                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}_`, setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe"), bodyClothes, leftHandClothes, rightHandClothes);
             } else {
                 [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}/${clothe.subs[subName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
             }
@@ -161,7 +198,10 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
         // sub
         [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheDiffsLayer(clothes[i], imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
         if (await setup.Paperdoll.checkImgExists(`${imgPath}mask.png`)) {
-            await paperdoll.loadHairMask(`${imgPath}mask.png`);
+            await paperdoll.loadMask(`${imgPath}mask.png`,'hair');
+        }
+        if (await setup.Paperdoll.checkImgExists(`${imgPath}clotheMask.png`)) {
+            await paperdoll.loadClotheMask(`${imgPath}clotheMask.png`,'clothe');
         }
         if (setup.Paperdoll.checkImgExists(`${imgPath}back_gray.png`)) {
             backClothes.push({ "path": `${imgPath}back_gray.png`, "color": mainColor });
@@ -178,8 +218,36 @@ setup.Paperdoll.layerBlendMode = {
     'default': 'hard-light'
 }
 setup.Paperdoll.paperdollPC = async function(canvas) {
-    window.breastType = null
-    window.hoodState = ""
+    // 生成缓存key
+    window.cacheKey = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
+
+    // 检查是否有缓存
+    const cachedCanvas = setup.Paperdoll.cache.get(cacheKey);
+    if (cachedCanvas) {
+        console.log('Using cached paperdoll');
+        const ctx = canvas.getContext('2d');
+        canvas.width = cachedCanvas.width;
+        canvas.height = cachedCanvas.height;
+        ctx.drawImage(cachedCanvas, 0, 0);
+
+        // 设置缩放
+        function calculateScale(x) {
+            if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
+            else return -0.0002403846153846154 * x + 1.646153846153846
+        }
+
+        canvas.style.transform = `scale(${calculateScale(canvas.height)})`;
+        if (canvas.height <= 256) {
+            canvas.style.imageRendering = "pixelated";
+            canvas.style.imageRendering = "crisp-edges";
+            canvas.style.msInterpolationMode = "nearest-neighbor";
+        }
+        return;
+    }
+
+    // 原有的渲染逻辑
+    window.breastType = null;
+    window.hoodState = "";
     let PCLayers = {
         // 衣服后背
         "backClothes": {
@@ -217,16 +285,16 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
                     dmarkSlot[dmarkobj.slot] = dmark;
                 }
                 for (let i in dmarkSlot) {
-                    if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmarks/${dmarkSlot[i].replace(/ /g, '_')}.png`)) {
+                    if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmark/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`)) {
                         if (i === "eyes") {
-                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_eyes.png`);
-                            await p.loadLayer(`${baseURL}face/eyes/${i}/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.eye_color_table[V.pc['eye color']]);
+                            await p.loadLayer(`${baseURL}face/dmark/eyes/${dmarkSlot[i].replace(/ /g, '_')}.png`);
+                            await p.loadLayer(`${baseURL}face/dmark/eyes/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.eye_color_table[V.pc['eye color']]);
                             continue;
                         }
                         if (i === "eyebrows") {
-                            await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']]);
+                            await p.loadLayer(`${baseURL}face/dmark/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']]);
                         } else {
-                            await p.loadLayer(`${baseURL}face/dmarks/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
+                            await p.loadLayer(`${baseURL}face/dmark/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                         }
                     } else {
                         if (i === "eyes") {
@@ -346,14 +414,17 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     }
 
     setTimeout(() => {
-        console.log('All layers loaded');
+        console.log('All layers loaded, caching result');
+        // p.ctx.imageSmoothingEnabled = false;
         p.draw();
+
         canvas.style.transform = `scale(${calculateScale(p.canvas.height)})`;
         if (p.canvas.height <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
             canvas.style.msInterpolationMode = "nearest-neighbor";
         }
+        setup.Paperdoll.cache.set(cacheKey, p.canvas);
     }, 50);
 
     return p;

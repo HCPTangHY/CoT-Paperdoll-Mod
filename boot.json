@@ -1,6 +1,6 @@
 {
     "name": "PaperdollFramework",
-    "version": "0.2.2",
+    "version": "0.3.1",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
@@ -24,7 +24,7 @@
         "params": [{
             "passage": "StoryCaption",
             "findString": "<div class=\"locimgcontainer\">",
-            "replace": "<div class=\"locimgcontainer\" style=\"height: 180px;\"><<PaperdollPC>>"
+            "replace": "<div style=\"display:grid\"><div class=\"locimgcontainer\" style=\"height: 180px; !important\"><<PaperdollPC>>"
         }, {
             "passage": "StoryCaption",
             "findString": "<div class=\"todimg\">",
@@ -38,6 +38,18 @@
             "findString": "<img @src=\"_nodeimg\">",
             "replace": "<img @src=\"_nodeimg\" width=\"75px\">",
             "all": true
+        },{
+            "passage": "StoryCaption",
+            "findString": "<div class=\"essential-stats\">",
+            "replace": "</div><div class=\"essential-stats\">"
+        },{
+            "passage": "ShopItem",
+            "findString": "<<clothingflags $shopitem.item>>",
+            "replace": "<<clothingflags $shopitem.item>><br><<shopModel>>"
+        },{
+            "passage": "ShopItem",
+            "findString": "T.subs[sub] = opt;",
+            "replace": "T.subs[sub] = opt;T.refreshShopModel();"
         }]
     }],
     "dependenceInfo": [{

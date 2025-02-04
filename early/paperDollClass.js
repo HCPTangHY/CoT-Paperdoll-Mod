@@ -9,6 +9,7 @@
             this.ctx = this.canvas.getContext('2d');
             this.layers = [];
             this.hairMask = null;
+            this.clothesMask = null;
         }
 
         async init() {
@@ -29,10 +30,10 @@
         }
 
         async loadLayer(src, color = "", type = "") {
-            src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src) || "";
+            let base64 = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src) || "";
             if (src === "") { return; }
             const img = new Image();
-            img.src = src;
+            img.src = base64;
             return new Promise((resolve) => {
                 img.onload = () => {
                     console.log("Layer loaded " + src)
@@ -49,51 +50,67 @@
                         }
                         const desaturatedImg = this.desaturateImage(img);
                         const coloredLayer = this.colorLayer(type === "skin" ? img : desaturatedImg, color, mode);
-                        if (type === "hair") {
-                            this.layers.push(this.hairMaskDraw(coloredLayer));
-                        } else {
-                            this.layers.push(coloredLayer);
-                        }
+                        this.layers.push(this.maskDraw(coloredLayer,type));
                     }
                 };
                 resolve(true);
             });
         }
 
-        async loadHairMask(src) {
+        async loadMask(src,type) {
             src = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(src) || "";
             if (src === "") { return; }
             const img = new Image();
             img.src = src;
             img.onload = () => {
-                this.hairMaskUpdate(img);
+                this.maskUpdate(img,type);
                 console.log('hair mask loaded')
             };
         }
 
-        hairMaskUpdate(img) {
+        maskUpdate(img,type) {
             let tempCanvas = document.createElement('canvas');
             let tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = img.width;
             tempCanvas.height = img.height;
 
-            if (this.hairMask === null) {
-                this.hairMask = document.createElement('canvas');
-                this.hairMask.width = img.width;
-                this.hairMask.height = img.height;
-                tempCtx.fillStyle = "#FFFFFF";
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            } else {
-                tempCtx.drawImage(this.hairMask, 0, 0)
+            switch (type) {
+                case "hair":
+                    if (this.hairMask === null) {
+                        this.hairMask = document.createElement('canvas');
+                        this.hairMask.width = img.width;
+                        this.hairMask.height = img.height;
+                        tempCtx.fillStyle = "#FFFFFF";
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    } else {
+                        tempCtx.drawImage(this.hairMask, 0, 0)
+                    }
+                    break;
+                case "clothe":
+                    if (this.clothesMask === null) {
+                        this.clothesMask = document.createElement('canvas');
+                        this.clothesMask.width = img.width;
+                        this.clothesMask.height = img.height;
+                        tempCtx.fillStyle = "#FFFFFF";
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    } else {
+                        tempCtx.drawImage(this.clothesMask, 0, 0)
+                    }
+                    break;
             }
             tempCtx.globalCompositeOperation = "destination-in";
             tempCtx.drawImage(img, 0, 0);
             console.log(tempCanvas.toDataURL('image/png', 1));
 
-            this.hairMask.getContext('2d').drawImage(tempCanvas, 0, 0);
-            console.log(this.hairMask.toDataURL('image/png', 1));
+            switch (type) {
+                case "hair":
+                    this.hairMask.getContext('2d').drawImage(tempCanvas, 0, 0);
+                    break;
+                case "clothe":
+                    this.clothesMask.getContext('2d').drawImage(tempCanvas, 0, 0);
+            }
         }
-        hairMaskDraw(img) {
+        maskDraw(img,type) {
             let tempCanvas = document.createElement('canvas');
             let tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = img.width;
@@ -101,8 +118,17 @@
 
             tempCtx.drawImage(img, 0, 0)
             tempCtx.globalCompositeOperation = "destination-in";
-            if (this.hairMask !== null) {
-                tempCtx.drawImage(this.hairMask, 0, 0);
+            switch (type) {
+                case "hair":
+                    if (this.hairMask !== null) {
+                        tempCtx.drawImage(this.hairMask, 0, 0);
+                    }
+                    break;
+                case "clothe":
+                    if (this.clothesMask !== null) {
+                        tempCtx.drawImage(this.clothesMask, 0, 0);
+                    }
+                    break;
             }
             return tempCanvas;
         }

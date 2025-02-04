@@ -1,7 +1,6 @@
 :: PaperdollUtil [widget nobr]
 
 <<widget "PaperdollPC">>
-    <<run console.log($(".locimgcontainer"))>>
     <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform-origin: top left;"></canvas>
     <<script>>
         $(document).one(":passageend", () => {
@@ -10,5 +9,23 @@
                 let paperdoll = await setup.Paperdoll.paperdollPC(canvas)
             })();
         });
+    <</script>>
+<</widget>>
+
+<<widget "shopModel">>
+    <canvas id="shopModel-canvas" style="position: relative;left: 20vw;width: 200px;"></canvas>
+    <<script>>
+        $(document).one(":passageend", () => {
+            (async function() {
+                const canvas = document.getElementById("shopModel-canvas");
+                let shopModel = await setup.Paperdoll.shopModel(canvas)
+            })();
+        });
+        T.refreshShopModel = function() {
+            (async function() {
+            const canvas = document.getElementById("shopModel-canvas");
+            let shopModel = await setup.Paperdoll.shopModel(canvas)
+            })();
+        }
     <</script>>
 <</widget>>
