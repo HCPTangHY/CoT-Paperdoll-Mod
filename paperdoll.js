@@ -126,31 +126,38 @@ setup.Paperdoll.clotheBaseSubLayers = async function(imgPath, color, bodyClothes
     return [bodyClothes, leftHandClothes, rightHandClothes];
 }
 
-setup.Paperdoll.clotheSubLayers = async function(imgPath, color, bodyClothes, leftHandClothes, rightHandClothes) {
+setup.Paperdoll.clotheSubLayers = async function(paperdoll, imgPath, color, bodyClothes, leftHandClothes, rightHandClothes,backClothes) {
     [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheBaseSubLayers(imgPath, color, bodyClothes, leftHandClothes, rightHandClothes);
     if (imgPath.charAt(imgPath.length - 1) !== '/') { imgPath.slice(0,-1); }
     bodyClothes.push({ "path": `${imgPath}acc_full.png` });
     leftHandClothes.push({ "path": `${imgPath}acc_left.png` });
     rightHandClothes.push({ "path": `${imgPath}acc_right.png` });
-    return [bodyClothes, leftHandClothes, rightHandClothes];
+    if (await setup.Paperdoll.checkImgExists(`${imgPath}mask.png`)) {
+        await paperdoll.loadMask(`${imgPath}mask.png`,'hair');
+    }
+    if (await setup.Paperdoll.checkImgExists(`${imgPath}clotheMask.png`)) {
+        await paperdoll.loadClotheMask(`${imgPath}clotheMask.png`,'clothe');
+    }
+    backClothes = await setup.Paperdoll.ifColorPush(`${imgPath}back`, backClothes, color);
+    return [bodyClothes, leftHandClothes, rightHandClothes,backClothes];
 }
 
-setup.Paperdoll.clotheDiffsLayer = async function(clothe, imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes) {
+setup.Paperdoll.clotheDiffsLayer = async function(paperdoll, clothe, imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
     for (let subName in clothe.subs) {
         if ((subName === 'color' || subName === 'color1') && (await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_right_gray.png`))) {
             continue;
         } else {
             if ((subName.indexOf('color') !== -1 || subName == "laces") && (await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_right_gray.png`))) {
-                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}_`, setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe"), bodyClothes, leftHandClothes, rightHandClothes);
+                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}${subName}_`, setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe"), bodyClothes, leftHandClothes, rightHandClothes, backClothes);
             } else {
-                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${subName}/${clothe.subs[subName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
+                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}${subName}/${clothe.subs[subName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
             }
         }
     }
     if (window.breastType) {
-        [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):""}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
+        [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):""}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
     }
-    return [bodyClothes, leftHandClothes, rightHandClothes];
+    return [bodyClothes, leftHandClothes, rightHandClothes, backClothes];
 }
 
 setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
@@ -184,30 +191,19 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
             mainColor = setup.Paperdoll.colorConvert(clothes[i].subs['color'], "clothe") || setup.Paperdoll.colorConvert(clothes[i].subs['color1'], "clothe");
         }
         // main
-        [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
+        [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll,imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes,backClothes);
         // configurations
         if (Object.keys(clothes[i].configs).length > 0) {
             for (let configName in clothes[i].configs) {
-                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(`${imgPath}${configName.replace(/ /g, '_')}/${clothes[i].configs[configName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
-                [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheDiffsLayer(clothes[i], `${imgPath}${configName.replace(/ /g, '_')}/`, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
+                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}${configName.replace(/ /g, '_')}/${clothes[i].configs[configName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheDiffsLayer(paperdoll, clothes[i], `${imgPath}${configName.replace(/ /g, '_')}/`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
                 if (configName === "hood" && clothes[i].configs[configName] === "up") {
                     window.hoodState = "up"
                 }
             }
         }
         // sub
-        [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheDiffsLayer(clothes[i], imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes);
-        if (await setup.Paperdoll.checkImgExists(`${imgPath}mask.png`)) {
-            await paperdoll.loadMask(`${imgPath}mask.png`,'hair');
-        }
-        if (await setup.Paperdoll.checkImgExists(`${imgPath}clotheMask.png`)) {
-            await paperdoll.loadClotheMask(`${imgPath}clotheMask.png`,'clothe');
-        }
-        if (setup.Paperdoll.checkImgExists(`${imgPath}back_gray.png`)) {
-            backClothes.push({ "path": `${imgPath}back_gray.png`, "color": mainColor });
-        } else if (setup.Paperdoll.checkImgExists(`${imgPath}back.png`)) {
-            backClothes.push({ "path": `${imgPath}back.png` });
-        }
+        [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheDiffsLayer(paperdoll, clothes[i], imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
     }
     return [paperdoll, bodyClothes, leftHandClothes, rightHandClothes, backClothes];
 }
