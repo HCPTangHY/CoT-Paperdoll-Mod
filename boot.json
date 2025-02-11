@@ -1,6 +1,6 @@
 {
     "name": "PaperdollFramework",
-    "version": "1.3.1.1",
+    "version": "1.4.0",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
@@ -24,7 +24,7 @@
         "params": [{
             "passage": "StoryCaption",
             "findString": "<div class=\"locimgcontainer\">",
-            "replace": "<div style=\"display:grid\"><div class=\"locimgcontainer\" style=\"height: 180px; !important\"><<PaperdollPC>>"
+            "replace": "<div style=\"display:grid\"><div class=\"locimgcontainer\" style=\"height: 180px; !important\" onclick=\"setup.open_dialog('PaperdollMirror');\"><<PaperdollPC>>"
         }, {
             "passage": "StoryCaption",
             "findString": "<div class=\"todimg\">",
@@ -42,6 +42,14 @@
             "passage": "StoryCaption",
             "findString": "<div class=\"essential-stats\">",
             "replace": "</div><div class=\"essential-stats\">"
+        },{
+            "passage":"StoryCaption",
+            "findString":"<div class=\"essential-stats-class-status\">",
+            "replace": "<<refreshPaperdollPC>><div class=\"essential-stats-class-status\">"
+        },{
+            "passage":"Wardrobe",
+            "findString":"<<include ClothesMenu>>",
+            "replace": "<<link 🪞 PaperdollMirror>><</link>><<include ClothesMenu>>"
         },{
             "passage": "ShopItem",
             "findString": "<<clothingflags $shopitem.item>>",

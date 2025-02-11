@@ -174,14 +174,10 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
             breastType[i] = "dafault"
         }
     }
-    let nowBreastType = breastType[0] || null
-    for (let i = 1; i < clothes.length; i++) {
-        if (breastType[i] != nowBreastType) {
-            nowBreastType = null
-        }
-
-    }
-    window.breastType = nowBreastType
+    window.breastType = breastType.length > 0 ?
+        breastType.every(type => type === breastType[0]) ? breastType[0] : null
+        : null;
+    // window.breastType = nowBreastType
     clothes = setup.Paperdoll.clothesIndex.sortClothes(clothes);
     for (let i = 0; i < clothes.length; i++) {
         let citem = setup.clothes[clothes[i].item];

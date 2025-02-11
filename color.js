@@ -191,5 +191,7 @@ const more_color = {
 setup.hair_color_table = hair_colors
 setup.skin_color_table = skin_colors;
 setup.eye_color_table = eye_colors;
-setup.clothe_color_table = clothe_colors;
+let clothe_color_table = setup.color_table;
+Object.assign(clothe_color_table, clothe_colors);
+setup.clothe_color_table = clothe_color_table;
 Object.assign(setup.clothe_color_table, more_color)

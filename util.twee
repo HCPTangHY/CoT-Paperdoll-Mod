@@ -1,7 +1,7 @@
 :: PaperdollUtil [widget nobr]
 
 <<widget "PaperdollPC">>
-    <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform-origin: top left;"></canvas>
+    <canvas id="paperdollPC-canvas" style="left: -5px;position: absolute;transform-origin: top left;" onclick="setup.open_dialog('PaperdollMirror');"></canvas>
     <<script>>
         $(document).one(":passageend", () => {
             (async function() {
@@ -27,5 +27,19 @@
             let shopModel = await setup.Paperdoll.shopModel(canvas)
             })();
         }
+    <</script>>
+<</widget>>
+
+<<widget "refreshPaperdollPC">>
+    <button onclick="refreshPaperdollPC()" style="z-index: 3;opacity: 50%;position: absolute;width: 24px;height: 24px;left: 260px;top: 280px;border-radius: 50px;border-color: #111;padding: 0;background-color: #111;">🗘</button>
+    <<script>>
+        window.refreshPaperdollPC = function() {
+            const cache = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
+            setup.Paperdoll.cache.canvasCache.delete(cache);
+            (async function() {
+                const canvas = document.getElementById("paperdollPC-canvas");
+                let paperdoll = await setup.Paperdoll.paperdollPC(canvas)
+            })();
+        };
     <</script>>
 <</widget>>

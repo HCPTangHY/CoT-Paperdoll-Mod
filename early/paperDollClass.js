@@ -68,48 +68,62 @@
             };
         }
 
-        maskUpdate(img,type) {
+        maskUpdate(img, type) {
             let tempCanvas = document.createElement('canvas');
             let tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = img.width;
             tempCanvas.height = img.height;
-
+        
             switch (type) {
                 case "hair":
                     if (this.hairMask === null) {
+                        // 第一次创建 mask
                         this.hairMask = document.createElement('canvas');
                         this.hairMask.width = img.width;
                         this.hairMask.height = img.height;
-                        tempCtx.fillStyle = "#FFFFFF";
-                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                    } else {
-                        tempCtx.drawImage(this.hairMask, 0, 0)
+                        let hairCtx = this.hairMask.getContext('2d');
+                        // 初始填充白色
+                        hairCtx.fillStyle = "#FFFFFF";
+                        hairCtx.fillRect(0, 0, this.hairMask.width, this.hairMask.height);
                     }
+                    
+                    // 在临时画布上绘制现有的 mask
+                    tempCtx.drawImage(this.hairMask, 0, 0);
+                    // 与新的 mask 进行交集操作
+                    tempCtx.globalCompositeOperation = "destination-in";
+                    tempCtx.drawImage(img, 0, 0);
+                    
+                    // 更新 hairMask
+                    let hairCtx = this.hairMask.getContext('2d');
+                    hairCtx.clearRect(0, 0, this.hairMask.width, this.hairMask.height);
+                    hairCtx.drawImage(tempCanvas, 0, 0);
                     break;
+        
                 case "clothe":
                     if (this.clothesMask === null) {
+                        // 第一次创建 mask
                         this.clothesMask = document.createElement('canvas');
                         this.clothesMask.width = img.width;
                         this.clothesMask.height = img.height;
-                        tempCtx.fillStyle = "#FFFFFF";
-                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                    } else {
-                        tempCtx.drawImage(this.clothesMask, 0, 0)
+                        let clotheCtx = this.clothesMask.getContext('2d');
+                        // 初始填充白色
+                        clotheCtx.fillStyle = "#FFFFFF";
+                        clotheCtx.fillRect(0, 0, this.clothesMask.width, this.clothesMask.height);
                     }
+                    
+                    // 在临时画布上绘制现有的 mask
+                    tempCtx.drawImage(this.clothesMask, 0, 0);
+                    // 与新的 mask 进行交集操作
+                    tempCtx.globalCompositeOperation = "destination-in";
+                    tempCtx.drawImage(img, 0, 0);
+                    
+                    // 更新 clothesMask
+                    let clotheCtx = this.clothesMask.getContext('2d');
+                    clotheCtx.clearRect(0, 0, this.clothesMask.width, this.clothesMask.height);
+                    clotheCtx.drawImage(tempCanvas, 0, 0);
                     break;
             }
-            tempCtx.globalCompositeOperation = "destination-in";
-            tempCtx.drawImage(img, 0, 0);
-            console.log(tempCanvas.toDataURL('image/png', 1));
-
-            switch (type) {
-                case "hair":
-                    this.hairMask.getContext('2d').drawImage(tempCanvas, 0, 0);
-                    break;
-                case "clothe":
-                    this.clothesMask.getContext('2d').drawImage(tempCanvas, 0, 0);
-            }
-        }
+        }        
         maskDraw(img,type) {
             let tempCanvas = document.createElement('canvas');
             let tempCtx = tempCanvas.getContext('2d');
