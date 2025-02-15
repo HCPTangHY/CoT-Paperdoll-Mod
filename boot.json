@@ -49,7 +49,7 @@
         },{
             "passage":"Wardrobe",
             "findString":"<<include ClothesMenu>>",
-            "replace": "<<link 🪞>><<run setup.open_dialog('PaperdollMirror');>><</link>><<include ClothesMenu>>"
+            "replace": "<<link 🪞 PaperdollMirrorPassage>><</link>><<include ClothesMenu>>"
         },{
             "passage": "ShopItem",
             "findString": "<<clothingflags $shopitem.item>>",

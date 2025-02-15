@@ -428,11 +428,11 @@ setup.Paperdoll.mirrorPC = function() {
     $("#ui-dialog-body").height('85vh');
     $("#ui-dialog-body").width('85vw');
     $("#ui-dialog-body").css("display", "grid");
-    $("#ui-dialog-body").append(`<canvas id="paperdollPC-canvas-large"></canvas>`);
+    $("#ui-dialog-body").append(`<canvas id="paperdollPC-canvas-dialog"></canvas>`);
     (async function() {
         const cache = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
         setup.Paperdoll.cache.canvasCache.delete(cache);
-        const canvas = document.getElementById("paperdollPC-canvas-large");
+        const canvas = document.getElementById("paperdollPC-canvas-dialog");
         let paperdoll = await setup.Paperdoll.paperdollPC(canvas);
         setTimeout(() => {
             canvas.style.transform = "none";
