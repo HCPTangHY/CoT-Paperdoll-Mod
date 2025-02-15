@@ -1,6 +1,6 @@
 :: PaperdollMirror [noevents nobr]
 
-<<run setup.Paperdoll.mirrorPC()>>
+<div id="paperdollMirror"></div>
 
 :: PaperdollMirrorPassage [noevents nobr]
 <<link '<-' Wardrobe>><</link>>

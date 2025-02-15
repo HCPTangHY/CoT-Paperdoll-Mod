@@ -425,10 +425,10 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
 }
 
 setup.Paperdoll.mirrorPC = function() {
-    $("#ui-dialog-body").height('85vh');
-    $("#ui-dialog-body").width('85vw');
-    $("#ui-dialog-body").css("display", "grid");
-    $("#ui-dialog-body").append(`<canvas id="paperdollPC-canvas-dialog"></canvas>`);
+    $("#paperdollMirror").height('85vh');
+    $("#paperdollMirror").width('85vw');
+    $("#paperdollMirror").css("display", "grid");
+    $("#paperdollMirror").append(`<canvas id="paperdollPC-canvas-dialog"></canvas>`);
     (async function() {
         const cache = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
         setup.Paperdoll.cache.canvasCache.delete(cache);
@@ -436,15 +436,15 @@ setup.Paperdoll.mirrorPC = function() {
         let paperdoll = await setup.Paperdoll.paperdollPC(canvas);
         setTimeout(() => {
             canvas.style.transform = "none";
-            if ($("#ui-dialog-body").height() > $("#ui-dialog-body").width()) {
-                canvas.style.width = $("#ui-dialog-body").width();
+            if ($("#paperdollMirror").height() > $("#paperdollMirror").width()) {
+                canvas.style.width = $("#paperdollMirror").width();
                 canvas.style.height = "auto";
             } else {
-                canvas.style.height = $("#ui-dialog-body").height()+"px";
+                canvas.style.height = $("#paperdollMirror").height()+"px";
                 canvas.style.width = "auto";
             }
-            $("#ui-dialog-body").height(canvas.style.height);
-            $("#ui-dialog-body").width(canvas.style.width);
+            $("#paperdollMirror").height(canvas.style.height);
+            $("#paperdollMirror").width(canvas.style.width);
         }, 500);
     })();
 }
