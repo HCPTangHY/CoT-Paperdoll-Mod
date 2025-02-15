@@ -1,3 +1,18 @@
 :: PaperdollMirror [noevents nobr]
 
 <<run setup.Paperdoll.mirrorPC()>>
+
+:: PaperdollMirrorPassage [noevents nobr]
+<<link '<-' Wardrobe>><</link>>
+<canvas id="paperdollPC-canvas-large" style="position: relative;"></canvas>
+<<script>>
+    $(document).one(":passageend", () => {
+        (async function() {
+            const cache = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
+            setup.Paperdoll.cache.canvasCache.delete(cache);
+            const canvas = document.getElementById("paperdollPC-canvas-large");
+            let paperdoll = await setup.Paperdoll.paperdollPC(canvas);
+            setTimeout(() => {canvas.style.transform = "none";}, 1000);
+        })();
+    });
+<</script>>
