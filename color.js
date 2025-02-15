@@ -16,7 +16,7 @@ const eye_colors = {
     'green': "#339900",
     'hazel': "#bd9b00",
     'light brown': "#bd8600",
-    'brown': "712600",
+    'brown': "#712600",
     'dark brown': "#520000",
     'gray': "#99a1b1",
     'black': "#443e5e"

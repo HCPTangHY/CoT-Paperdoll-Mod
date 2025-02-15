@@ -1,6 +1,6 @@
 {
     "name": "PaperdollFramework",
-    "version": "1.4.0",
+    "version": "1.4.3",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
@@ -47,17 +47,13 @@
             "findString":"<div class=\"essential-stats-class-status\">",
             "replace": "<<refreshPaperdollPC>><div class=\"essential-stats-class-status\">"
         },{
-            "passage":"Wardrobe",
-            "findString":"<<include ClothesMenu>>",
-            "replace": "<<link 🪞 PaperdollMirror>><</link>><<include ClothesMenu>>"
-        },{
             "passage": "ShopItem",
             "findString": "<<clothingflags $shopitem.item>>",
             "replace": "<<clothingflags $shopitem.item>><br><<shopModel>>"
         },{
             "passage": "ShopItem",
             "findString": "T.subs[sub] = opt;",
-            "replace": "T.subs[sub] = opt;T.refreshShopModel();"
+            "replace": "T.subs[sub] = opt;if (T.shopitem.type=='clothes'){T.refreshShopModel();}"
         }]
     }],
     "dependenceInfo": [{

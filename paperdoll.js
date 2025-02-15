@@ -166,12 +166,12 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
     for (let i = 0; i < clothes.length; i++) {
         let citem = setup.clothes[clothes[i].item];
         if (citem.covers.indexOf("nipples") === -1) { continue }
-        breastType[i] = null
+        breastType.push(null);
         let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
         if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast${Math.floor(V.pc['breast size']/200)}`)) {
-            breastType[i] = "num"
+            breastType[breastType.length-1] = "num"
         } else if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast`)) {
-            breastType[i] = "dafault"
+            breastType[breastType.length-1] = "dafault"
         }
     }
     window.breastType = breastType.length > 0 ?
@@ -210,6 +210,8 @@ setup.Paperdoll.layerBlendMode = {
     'default': 'hard-light'
 }
 setup.Paperdoll.paperdollPC = async function(canvas) {
+    // 自定义缩放大小
+    const SCALE_SIZE = null;
     // 生成缓存key
     window.cacheKey = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
 
@@ -225,10 +227,10 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 设置缩放
         function calculateScale(x) {
             if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
-            else return -0.0002403846153846154 * x + 1.646153846153846
+            else return 0.004761904761904763*x-3.2761904761904774
         }
 
-        canvas.style.transform = `scale(${calculateScale(canvas.height)})`;
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(canvas.height)})`;
         if (canvas.height <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
@@ -402,7 +404,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
 
     function calculateScale(x) {
         if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
-        else return -0.0002403846153846154 * x + 1.646153846153846
+        else return 0.004761904761904763*x-3.2761904761904774
     }
 
     setTimeout(() => {
@@ -410,7 +412,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // p.ctx.imageSmoothingEnabled = false;
         p.draw();
 
-        canvas.style.transform = `scale(${calculateScale(p.canvas.height)})`;
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(p.canvas.height)})`;
         if (p.canvas.height <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
@@ -420,4 +422,16 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     }, 50);
 
     return p;
+}
+
+setup.Paperdoll.mirrorPC = function() {
+    $("#ui-dialog-body").height("100vw");
+    $("#ui-dialog-body").append(`<canvas id="paperdollPC-canvas-large" style="position: relative;"></canvas>`);
+    (async function() {
+        const cache = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
+        setup.Paperdoll.cache.canvasCache.delete(cache);
+        const canvas = document.getElementById("paperdollPC-canvas-large");
+        let paperdoll = await setup.Paperdoll.paperdollPC(canvas);
+        setTimeout(() => {canvas.style.transform = "none";}, 500);
+    })();
 }

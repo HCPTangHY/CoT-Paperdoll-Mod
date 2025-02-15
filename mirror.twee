@@ -1,13 +1,3 @@
 :: PaperdollMirror [noevents nobr]
 
-<<link '<-' Wardrobe>><</link>>
-<canvas id="paperdollPC-canvas-large" style="position: relative;"></canvas>
-<<script>>
-    $(document).one(":passageend", () => {
-        (async function() {
-            const canvas = document.getElementById("paperdollPC-canvas-large");
-            let paperdoll = await setup.Paperdoll.paperdollPC(canvas);
-            canvas.style.transform = "scale(1)";
-        })();
-    });
-<</script>>
+<<run setup.Paperdoll.mirrorPC()>>
