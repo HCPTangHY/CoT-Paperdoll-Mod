@@ -53,7 +53,7 @@ setup.Paperdoll.clothesIndex = {
     'footwear': { layer: 4, order: 1 },
     'underwear': { layer: 1, order: 1 },
     'swimwear': { layer: 2, order: 1 },
-    'accessories': { layer: 3, order: 1 },
+    'accessories': { layer: 7.5, order: 1 },
     'masks': { layer: 8, order: 1 },
     'bags': { layer: 10, order: 1 },
     sortClothes: function(clothes) {
@@ -227,7 +227,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 设置缩放
         function calculateScale(x) {
             if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
-            else return 0.004761904761904763*x-3.2761904761904774
+            else return -0.000004481132075471626*x+1.504588679245283
         }
 
         canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(canvas.height)})`;
@@ -328,7 +328,8 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             load: async function() {
                 if (V.pc.has_part("penis") && V.pc.is_part_visible('penis')) {
                     await p.loadLayer(V.pc.virgin() ? `${baseURL}body/penis/penis_virgin${Math.floor(V.pc['penis size']/200)-2}.png` : `${baseURL}body/penis/penis${Math.floor(V.pc['penis size']/200)}${V.pc['penis type']=="uncircumcised"?"_uncircumcised":""}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                } else if (V.pc.has_part("breasts") && V.pc.is_part_visible('nipples')) {
+                }
+                if (V.pc.has_part("breasts") && V.pc.is_part_visible('nipples')) {
                     await p.loadLayer(`${baseURL}body/breasts/breast${Math.floor(V.pc['breast size']/200)}.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
                 }
                 if (window.breastType) {
@@ -404,7 +405,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
 
     function calculateScale(x) {
         if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
-        else return 0.004761904761904763*x-3.2761904761904774
+        else return -0.000004481132075471626*x+1.504588679245283
     }
 
     setTimeout(() => {

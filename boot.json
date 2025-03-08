@@ -1,6 +1,6 @@
 {
     "name": "PaperdollFramework",
-    "version": "1.4.5",
+    "version": "1.4.7",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
@@ -57,7 +57,7 @@
         },{
             "passage": "ShopItem",
             "findString": "T.subs[sub] = opt;",
-            "replace": "T.subs[sub] = opt;if (T.shopitem.type=='clothes'){T.refreshShopModel();}"
+            "replace": "T.subs[sub] = opt;if (V.shopitem.type=='clothes'){T.refreshShopModel();}"
         }]
     }],
     "dependenceInfo": [{
