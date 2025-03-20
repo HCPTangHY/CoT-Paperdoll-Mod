@@ -65,3 +65,20 @@
 | undercut_on_both_sides_with_the_rest_in_a_tight_braid | 削边辫 | chin-length |
 | undercut_on_both_sides_with_the_rest_pulled_back_into_a_ponytail | 削边马尾 | chin-length |
 | unstyled | 未经打理的 |  |
+
+## v0.6.3d新增发型
+
+| 英文描述                      | 中文翻译        |
+|-----------------------------|--------------|
+| drawn back in a high ponytail | 半扎高马尾     |
+| Dutch-braided into twin tails | 荷兰双辫      |
+| drawn back into a bubble braid ponytail | 气球辫马尾   |
+| drawn back into a tightly braided ponytail | 密编织马尾   |
+| in a shaggy wolf cut           | 凌乱狼尾      |
+| in a layered bob             | 分层波波头     |
+| in a butterfly cut           | 蝶翼式发型     |
+| feathered with a side part     | 侧分羽毛剪     |
+| feathered with a center part   | 中分羽毛剪     |
+| styled with gelled edges       | 捏反翘        |
+| in a blunt lob                 | 齐边波波头     |
+| in voluminous, glamorous curls | 华丽蓬蓬卷     |

@@ -167,7 +167,7 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
         let citem = setup.clothes[clothes[i].item];
         if (citem.covers.indexOf("nipples") === -1) { continue }
         breastType.push(null);
-        let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
+        let imgPath = `res/paperdoll/clothes/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
         if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast${Math.floor(V.pc['breast size']/200)}`)) {
             breastType[breastType.length-1] = "num"
         } else if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast`)) {
@@ -181,7 +181,7 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
     clothes = setup.Paperdoll.clothesIndex.sortClothes(clothes);
     for (let i = 0; i < clothes.length; i++) {
         let citem = setup.clothes[clothes[i].item];
-        let imgPath = `res/paperdoll/clothes-${V.pc.has_part("penis")? "m" : "f"}/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
+        let imgPath = `res/paperdoll/clothes/${citem.category}/${clothes[i].item.replace(/ /g, '_')}/`;
         let mainColor = null;
         if (clothes[i].subs['color'] || clothes[i].subs['color1']) {
             mainColor = setup.Paperdoll.colorConvert(clothes[i].subs['color'], "clothe") || setup.Paperdoll.colorConvert(clothes[i].subs['color1'], "clothe");
@@ -230,8 +230,9 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
             else return -0.000004481132075471626*x+1.504588679245283
         }
 
-        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(canvas.height)})`;
-        if (canvas.height <= 256) {
+        let scalebase = canvas.height>canvas.width?canvas.height:canvas.width
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)})`;
+        if (scalebase <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
             canvas.style.msInterpolationMode = "nearest-neighbor";
@@ -265,7 +266,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         "bodynoarms": {
             layer: 0,
             load: async function() {
-                await p.loadLayer(`${baseURL}body/basenoarms-${V.pc.has_part("penis")? "m" : "f"}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
+                await p.loadLayer(`${baseURL}body/basenoarms.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
             }
         },
         // 头
@@ -364,6 +365,14 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
                 }
             }
         },
+        // 侧发
+        "sidehair": {
+            layer: 85,
+            load: async function() {
+                // if (window.hoodState === "up") { return }
+                await p.loadLayer(`${baseURL}hair/sides/${V.pc['hair style'].replace(/ /g, '_')}/${V.pc['hair length'].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']], 'hair');
+            }
+        },
         // 前发
         "fronthair": {
             layer: 90,
@@ -381,7 +390,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     let p = new PaperDollSystem(canvas);
     const baseURL = `res/paperdoll/`;
     // 加载人模
-    await p.loadBaseModel(`${baseURL}body/basenoarms-${V.pc.has_part("penis")? "m" : "f"}.png`);
+    await p.loadBaseModel(`${baseURL}body/basenoarms.png`);
 
     V.pc.get_clothingItems_classes();
     let clothes = V.pc.clothes;
@@ -413,8 +422,9 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // p.ctx.imageSmoothingEnabled = false;
         p.draw();
 
-        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(p.canvas.height)})`;
-        if (p.canvas.height <= 256) {
+        let scalebase = p.canvas.height>p.canvas.width?p.canvas.height:p.canvas.width
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)})`;
+        if (scalebase <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
             canvas.style.msInterpolationMode = "nearest-neighbor";
@@ -448,4 +458,34 @@ setup.Paperdoll.mirrorPC = function() {
             $("#paperdollMirror").width(canvas.style.width);
         }, 500);
     })();
+}
+
+let oldversion = false;
+// 旧版兼容
+for (let type of window.addonBeautySelectorAddon.getTypeOrder()) {
+    let imgListRef = type.imgListRef;
+    if (!imgListRef.get('res/paperdoll/body/basenoarms-f.png')){continue}
+    imgListRef.forEach((v,k)=>{
+        if((k||"").includes("-f/") || ((k||"").includes("-f."))) {
+            window.addonBeautySelectorAddon.table.get(type.type).typeImg.get(type.type).set(k.replace("-f/","/").replace("-f.","."),v)
+        }
+    });
+    oldversion = true;
+}
+
+if (oldversion) {
+    window.modSweetAlert2Mod.fire({
+        text: '旧版兼容已启动，可能在数个版本后移除，请及时更新美化包！ Old version compatibility has been started, and may be removed in several versions. Please update your beauty package as soon as possible!',
+        icon: 'warning',
+        confirmButtonText: '我知道了 I understand'
+    });
+}
+
+if (window.addonBeautySelectorAddon.getTypeOrder().filter(x=>x.type=="PaperdollImagePackTemplate你的美化名字").length>0) {
+    window.modSweetAlert2Mod.fire({
+        title: '你正在使用非法美化Type! You are using an illegal beauty type!',
+        text: "如果你是玩家，请立刻卸载名为 PaperdollImagePackTemplate改为你的美化名字 的模组。\n如果你是美化作者，请修改你的美化名字name栏位，type栏，imgDir栏为你自己的名字与路径！ \n\n If you are a player, please uninstall the mod named PaperdollImagePackTemplate. \n If you are a beauty author, please modify the name, type, and imgDir fields of your beauty to your own name and path!",
+        icon: 'error',
+        confirmButtonText: '我知道了 I understand'
+    });
 }
