@@ -16,7 +16,7 @@ setup.Paperdoll.shopModel = async function(canvas) {
         "bodynoarms": {
             layer: 0,
             load: async function() {
-                await p.loadLayer(`${baseURL}body/basenoarms-${V.pc.has_part("penis")? "m" : "f"}.png`, "#F5F5F5");
+                await p.loadLayer(`${baseURL}body/basenoarms.png`, "#F5F5F5");
             }
         },
         // 头
@@ -75,7 +75,7 @@ setup.Paperdoll.shopModel = async function(canvas) {
     let p = new PaperDollSystem(canvas);
     const baseURL = `res/paperdoll/`;
     // 加载人模
-    await p.loadBaseModel(`${baseURL}body/basenoarms-${V.pc.has_part("penis")? "m" : "f"}.png`);
+    await p.loadBaseModel(`${baseURL}body/basenoarms.png`);
 
     let clothe = V.shopitem;
     clothe.subs = T.subs;
@@ -96,6 +96,7 @@ setup.Paperdoll.shopModel = async function(canvas) {
         console.log('All layers loaded, caching result');
         // p.ctx.imageSmoothingEnabled = false;
         p.draw();
+        if (p.canvas.width<200)canvas.style.transform = `scale(1)`;
 
         if (p.canvas.height <= 256) {
             canvas.style.imageRendering = "pixelated";
