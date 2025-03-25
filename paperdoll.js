@@ -56,6 +56,7 @@ setup.Paperdoll.clothesIndex = {
     'accessories': { layer: 7.5, order: 1 },
     'masks': { layer: 8, order: 1 },
     'bags': { layer: 10, order: 1 },
+    'other': { layer: 10, order: 1 },
     sortClothes: function(clothes) {
         let map = {};
         for (let i = 0; i < clothes.length; i++) {

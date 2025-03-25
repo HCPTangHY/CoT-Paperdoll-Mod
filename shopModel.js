@@ -7,8 +7,8 @@ setup.Paperdoll.shopModel = async function(canvas) {
             layer: -20,
             load: async function() {
                 for (let i = 0; i < backClothes.length; i++) {
-                    if (backClothes[i].color) await p.loadLayer(backClothes[i].path, backClothes[i].color, 'clothes');
-                    else await p.loadLayer(backClothes[i].path);
+                    if (backClothes[i].color) await SMp.loadLayer(backClothes[i].path, backClothes[i].color, 'clothes');
+                    else await SMp.loadLayer(backClothes[i].path);
                 }
             }
         },
@@ -16,21 +16,21 @@ setup.Paperdoll.shopModel = async function(canvas) {
         "bodynoarms": {
             layer: 0,
             load: async function() {
-                await p.loadLayer(`${baseURL}body/basenoarms.png`, "#F5F5F5");
+                await SMp.loadLayer(`${baseURL}body/basenoarms.png`, "#F5F5F5");
             }
         },
         // 头
         "head": {
             layer: 10,
             load: async function() {
-                await p.loadLayer(`${baseURL}body/basehead.png`, "#F5F5F5");
+                await SMp.loadLayer(`${baseURL}body/basehead.png`, "#F5F5F5");
             }
         },
         // 左手
         "leftarm": {
             layer: 30,
             load: async function() {
-                await p.loadLayer(`${baseURL}body/leftarm.png`, "#F5F5F5");
+                await SMp.loadLayer(`${baseURL}body/leftarm.png`, "#F5F5F5");
             }
         },
         // 左手衣服层
@@ -38,8 +38,8 @@ setup.Paperdoll.shopModel = async function(canvas) {
             layer: 40,
             load: async function() {
                 for (let i = 0; i < leftHandClothes.length; i++) {
-                    if (leftHandClothes[i].color) await p.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color, 'clothes');
-                    else await p.loadLayer(leftHandClothes[i].path);
+                    if (leftHandClothes[i].color) await SMp.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color, 'clothes');
+                    else await SMp.loadLayer(leftHandClothes[i].path);
                 }
             }
         },
@@ -48,8 +48,8 @@ setup.Paperdoll.shopModel = async function(canvas) {
             layer: 60,
             load: async function() {
                 for (let i = 0; i < bodyClothes.length; i++) {
-                    if (bodyClothes[i].color) await p.loadLayer(bodyClothes[i].path, bodyClothes[i].color, 'clothes');
-                    else await p.loadLayer(bodyClothes[i].path);
+                    if (bodyClothes[i].color) await SMp.loadLayer(bodyClothes[i].path, bodyClothes[i].color, 'clothes');
+                    else await SMp.loadLayer(bodyClothes[i].path);
                 }
             }
         },
@@ -57,7 +57,7 @@ setup.Paperdoll.shopModel = async function(canvas) {
         "rightarm": {
             layer: 70,
             load: async function() {
-                await p.loadLayer(`${baseURL}body/rightarm.png`, "#F5F5F5");
+                await SMp.loadLayer(`${baseURL}body/rightarm.png`, "#F5F5F5");
             }
         },
         // 右手衣服层
@@ -65,17 +65,17 @@ setup.Paperdoll.shopModel = async function(canvas) {
             layer: 80,
             load: async function() {
                 for (let i = 0; i < rightHandClothes.length; i++) {
-                    if (rightHandClothes[i].color) await p.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color, 'clothes');
-                    else await p.loadLayer(rightHandClothes[i].path);
+                    if (rightHandClothes[i].color) await SMp.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color, 'clothes');
+                    else await SMp.loadLayer(rightHandClothes[i].path);
                 }
             }
         },
 
     }
-    let p = new PaperDollSystem(canvas);
+    let SMp = new PaperDollSystem(canvas);
     const baseURL = `res/paperdoll/`;
     // 加载人模
-    await p.loadBaseModel(`${baseURL}body/basenoarms.png`);
+    await SMp.loadBaseModel(`${baseURL}body/basenoarms.png`);
 
     let clothe = V.shopitem;
     clothe.subs = T.subs;
@@ -85,7 +85,7 @@ setup.Paperdoll.shopModel = async function(canvas) {
     let rightHandClothes = [];
     let bodyClothes = [];
     let backClothes = [];
-    [p, bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheLayers(p, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+    [SMp, bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheLayers(SMp, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
 
     let layers = Object.keys(ModelLayers).sort((a, b) => ModelLayers[a].layer - ModelLayers[b].layer);
     for (let layer of layers) {
@@ -95,15 +95,15 @@ setup.Paperdoll.shopModel = async function(canvas) {
     setTimeout(() => {
         console.log('All layers loaded, caching result');
         // p.ctx.imageSmoothingEnabled = false;
-        p.draw();
-        if (p.canvas.width<200)canvas.style.transform = `scale(1)`;
+        SMp.draw();
+        if (SMp.canvas.width<200)canvas.style.transform = `scale(1)`;
 
-        if (p.canvas.height <= 256) {
+        if (SMp.canvas.height <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
             canvas.style.msInterpolationMode = "nearest-neighbor";
         }
     }, 50);
 
-    return p;
+    return SMp;
 }
