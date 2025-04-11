@@ -244,150 +244,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     // 原有的渲染逻辑
     window.breastType = null;
     window.hoodState = "";
-    let PCLayers = {
-        // 衣服后背
-        "backClothes": {
-            layer: -20,
-            load: async function() {
-                for (let i = 0; i < backClothes.length; i++) {
-                    if (backClothes[i].color) await p.loadLayer(backClothes[i].path, backClothes[i].color, 'clothes');
-                    else await p.loadLayer(backClothes[i].path);
-                }
-            }
-        },
-        // 后发
-        "backhair": {
-            layer: -10,
-            load: async function() {
-                if (window.hoodState === "up") { return }
-                await p.loadLayer(`${baseURL}hair/back/${V.pc['hair style'].replace(/ /g, '_')}/${V.pc['hair length'].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']], 'hair');
-            }
-        },
-        // 身体(无手)
-        "bodynoarms": {
-            layer: 0,
-            load: async function() {
-                await p.loadLayer(`${baseURL}body/basenoarms.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-            }
-        },
-        // 头
-        "head": {
-            layer: 10,
-            load: async function() {
-                await p.loadLayer(`${baseURL}body/basehead.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                let dmarkSlot = { "chin": null, "face": null, "eyebrows": null, "eyes": null, "lips": null, "nose": null };
-                for (let dmark of V.pc.distinguishing_marks) {
-                    let dmarkobj = setup.distinguishing_marks[dmark];
-                    dmarkSlot[dmarkobj.slot] = dmark;
-                }
-                for (let i in dmarkSlot) {
-                    if (dmarkSlot[i] && await setup.Paperdoll.checkImgExists(`${baseURL}face/dmark/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`)) {
-                        if (i === "eyes") {
-                            await p.loadLayer(`${baseURL}face/dmark/eyes/${dmarkSlot[i].replace(/ /g, '_')}.png`);
-                            await p.loadLayer(`${baseURL}face/dmark/eyes/${dmarkSlot[i].replace(/ /g, '_')}_iris.png`, setup.eye_color_table[V.pc['eye color']]);
-                            continue;
-                        }
-                        if (i === "eyebrows") {
-                            await p.loadLayer(`${baseURL}face/dmark/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']]);
-                        } else {
-                            await p.loadLayer(`${baseURL}face/dmark/${i}/${dmarkSlot[i].replace(/ /g, '_')}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                        }
-                    } else {
-                        if (i === "eyes") {
-                            await p.loadLayer(`${baseURL}face/baseeyes.png`);
-                            await p.loadLayer(`${baseURL}face/baseiris.png`, setup.eye_color_table[V.pc['eye color']]);
-                            continue;
-                        }
-                        if (i === "eyebrows") {
-                            await p.loadLayer(`${baseURL}face/base${i}.png`, setup.hair_color_table[V.pc['hair color']]);
-                        } else {
-                            await p.loadLayer(`${baseURL}face/base${i}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                        }
-                    }
-                }
-            }
-        },
-        // 左手
-        "leftarm": {
-            layer: 30,
-            load: async function() {
-                await p.loadLayer(`${baseURL}body/leftarm.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-            }
-        },
-        // 左手衣服层
-        "leftHandClothes": {
-            layer: 40,
-            load: async function() {
-                for (let i = 0; i < leftHandClothes.length; i++) {
-                    if (leftHandClothes[i].color) await p.loadLayer(leftHandClothes[i].path, leftHandClothes[i].color, 'clothes');
-                    else await p.loadLayer(leftHandClothes[i].path);
-                }
-            }
-        },
-        // 阴茎和乳房
-        "penisbreasts": {
-            layer: 50,
-            load: async function() {
-                if (V.pc.has_part("penis") && V.pc.is_part_visible('penis')) {
-                    await p.loadLayer(V.pc.virgin() ? `${baseURL}body/penis/penis_virgin${Math.floor(V.pc['penis size']/200)-2}.png` : `${baseURL}body/penis/penis${Math.floor(V.pc['penis size']/200)}${V.pc['penis type']=="uncircumcised"?"_uncircumcised":""}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-                }
-                if (V.pc.has_part("breasts") && V.pc.is_part_visible('nipples')) {
-                    await p.loadLayer(`${baseURL}body/breasts/breast${Math.floor(V.pc['breast size']/200)}.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
-                }
-                if (window.breastType) {
-                    await p.loadLayer(`${baseURL}body/breasts/breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):"3"}_clothed.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
-                }
-            }
-        },
-        // 身体衣服层
-        "bodyClothes": {
-            layer: 60,
-            load: async function() {
-                for (let i = 0; i < bodyClothes.length; i++) {
-                    if (bodyClothes[i].color) await p.loadLayer(bodyClothes[i].path, bodyClothes[i].color, 'clothes');
-                    else await p.loadLayer(bodyClothes[i].path);
-                }
-            }
-        },
-        // 右手
-        "rightarm": {
-            layer: 70,
-            load: async function() {
-                await p.loadLayer(`${baseURL}body/rightarm.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
-            }
-        },
-        // 右手衣服层
-        "rightHandClothes": {
-            layer: 80,
-            load: async function() {
-                for (let i = 0; i < rightHandClothes.length; i++) {
-                    if (rightHandClothes[i].color) await p.loadLayer(rightHandClothes[i].path, rightHandClothes[i].color, 'clothes');
-                    else await p.loadLayer(rightHandClothes[i].path);
-                }
-            }
-        },
-        // 侧发
-        "sidehair": {
-            layer: 85,
-            load: async function() {
-                // if (window.hoodState === "up") { return }
-                await p.loadLayer(`${baseURL}hair/sides/${V.pc['hair style'].replace(/ /g, '_')}/${V.pc['hair length'].replace(/ /g, '_')}.png`, setup.hair_color_table[V.pc['hair color']], 'hair');
-            }
-        },
-        // 前发
-        "fronthair": {
-            layer: 90,
-            load: async function() {
-                let frontHair = V.pc['hair style'].replace(/ /g, '_') + '/' + V.pc['hair length'].replace(/ /g, '_') + '.png';
-                if (await setup.Paperdoll.checkImgExists(`${baseURL}hair/front/${frontHair}`)) {
-                    await p.loadLayer(`${baseURL}hair/front/${frontHair}`, setup.hair_color_table[V.pc['hair color']], 'hair');
-                } else {
-                    await p.loadLayer(`${baseURL}hair/front/default.png`, setup.hair_color_table[V.pc['hair color']], 'hair');
-                }
-            }
-        }
 
-    }
     let p = new PaperDollSystem(canvas);
     const baseURL = `res/paperdoll/`;
     // 加载人模
@@ -405,10 +262,11 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     // Object.assign(PCLayers, {xxxx});
 
     // 后景替换插入点
-
+    let PCLayers = setup.Paperdoll.models.main.layer;
+    let content = {p, baseURL, backClothes, leftHandClothes, rightHandClothes, bodyClothes};
     let layers = Object.keys(PCLayers).sort((a, b) => PCLayers[a].layer - PCLayers[b].layer);
     for (let layer of layers) {
-        await PCLayers[layer].load();
+        await PCLayers[layer].load(content);
     }
 
     // 前景替换插入点
