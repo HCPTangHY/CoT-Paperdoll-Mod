@@ -264,6 +264,13 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     // 后景替换插入点
     let PCLayers = setup.Paperdoll.models.main.layer;
     let content = {p, baseURL, backClothes, leftHandClothes, rightHandClothes, bodyClothes};
+
+    const sortedLightingLayers = Object.entries(setup.Paperdoll.models.lighting.layer).sort(([, a], [, b]) => a.layer - b.layer);
+    for (const [name, layerDef] of sortedLightingLayers) {
+         console.log(`Loading lighting layer: ${name}`);
+         await layerDef.load(content);
+    }
+    
     let layers = Object.keys(PCLayers).sort((a, b) => PCLayers[a].layer - PCLayers[b].layer);
     for (let layer of layers) {
         await PCLayers[layer].load(content);

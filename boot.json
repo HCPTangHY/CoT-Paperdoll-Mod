@@ -1,12 +1,13 @@
 {
     "name": "PaperdollFramework",
-    "version": "1.6.1",
+    "version": "1.7.0",
     "styleFileList": [],
     "scriptFileList": [],
     "scriptFileList_earlyload": [],
     "scriptFileList_inject_early": [
         "early/PaperdollClass.js",
-        "early/PaperdollOriginalImagePack.js"
+        "early/PaperdollOriginalImagePack.js",
+        "early/tinycolor.js"
     ],
     "scriptFileList_preload": [
         "preload/preload.js"

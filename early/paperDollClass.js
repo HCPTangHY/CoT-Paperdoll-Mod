@@ -83,6 +83,7 @@
             await new Promise(resolve => { baseHairImg.onload = resolve; });
 
             let finalBaseHair = baseHairImg;
+            finalBaseHair = this.desaturateImage(finalBaseHair);
             finalBaseHair = this.colorLayer(finalBaseHair, mainColor, setup.Paperdoll.layerBlendMode['hair'] || setup.Paperdoll.layerBlendMode['default']);
             if (baseHairMaskSrc) {
                 await this.loadMask(baseHairMaskSrc, 'hair');

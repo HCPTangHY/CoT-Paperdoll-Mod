@@ -4,7 +4,7 @@ setup.Paperdoll.models = {};
 
 // content = {p, baseURL, backClothes, leftHandClothes, rightHandClothes, bodyClothes}
 setup.Paperdoll.models.main = {
-    name:"shopModel",
+    name:"main",
     layer: {
         "backClothes": {
             layer: -20,
@@ -102,7 +102,7 @@ setup.Paperdoll.models.main = {
             layer: 50,
             load: async function(content) {
                 if (V.pc.has_part("penis") && V.pc.is_part_visible('penis')) {
-                    await content.p.loadLayer(V.pc.virgin() ? `${content.baseURL}body/penis/penis_virgin${Math.floor(V.pc['penis size']/200)-2}.png` : `${content.baseURL}body/penis/penis${Math.floor(V.pc['penis size']/200)}${V.pc['penis type']=="uncircumcised"?"_uncircumcised":""}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
+                    await content.p.loadLayer(`${content.baseURL}body/penis/penis${Math.floor(V.pc['penis size']/200)}${V.pc['penis type']=="uncircumcised"?"_uncircumcised":""}.png`, setup.skin_color_table[V.pc['skin color']], 'skin');
                 }
                 if (V.pc.has_part("breasts") && V.pc.is_part_visible('nipples')) {
                     await content.p.loadLayer(`${content.baseURL}body/breasts/breast${Math.floor(V.pc['breast size']/200)}.png`, setup.skin_color_table[V.pc['skin color']], 'skin')
@@ -197,7 +197,7 @@ setup.Paperdoll.models.main = {
 }
 
 setup.Paperdoll.models.shop = {
-    name:"main",
+    name:"shopMain",
     layer: {
         // 衣服后背
         "backClothes": {
@@ -268,4 +268,232 @@ setup.Paperdoll.models.shop = {
             }
         },
     }
+}
+
+setup.Paperdoll.models.lighting = {
+    name: "lighting",
+
+    options: {
+        yOffset: 0.425,
+        xOffset: 0,
+        spotlight: {
+            maxAlpha: 0.7,
+            radiusX: 0.25,
+            radiusY: 0.05,
+        },
+        glow: {
+            maxAlpha: 0.6,
+            radiusX: 0.215,
+            radiusY: 0.39,
+            yOffset: -0.32,
+        },
+        gradient: {
+            enabled: true,
+            height: 0.78,
+            maxAlpha: 0.6,
+        },
+        flat: {
+            enabled: true,
+            maxAlpha: 0.6,
+        },
+        colors: {
+            default: "#ffffff",
+        },
+    },
+
+    layer: {
+        "spotlight": {
+            layer: 100,
+            load: async function(content) {
+                const options = setup.Paperdoll.models.lighting.options;
+                const p = content.p;
+
+                const lightCanvas = document.createElement('canvas');
+                lightCanvas.width = p.canvas.width;
+                lightCanvas.height = p.canvas.height;
+                const ctx = lightCanvas.getContext('2d');
+
+                const centerX = lightCanvas.width / 2;
+                const centerY = lightCanvas.height / 2;
+
+                const baseColor = lightBlendColor(options);
+
+                drawRadialGradient(
+                    ctx,
+                    centerX,
+                    centerY,
+                    options.xOffset,
+                    options.yOffset,
+                    options.spotlight.radiusX,
+                    options.spotlight.radiusY,
+                    options.spotlight.maxAlpha,
+                    0.2,
+                    baseColor
+                );
+                p.layers.push(lightCanvas);
+                // console.log("Lighting layer 'spotlight' added.");
+            }
+        },
+        "glow": {
+            layer: 110,
+            load: async function(content) {
+                const options = setup.Paperdoll.models.lighting.options;
+                const p = content.p;
+
+                const lightCanvas = document.createElement('canvas');
+                lightCanvas.width = p.canvas.width;
+                lightCanvas.height = p.canvas.height;
+                const ctx = lightCanvas.getContext('2d');
+
+                const centerX = lightCanvas.width / 2;
+                const centerY = lightCanvas.height / 2;
+                const baseColor = lightBlendColor(options);
+
+                drawRadialGradient(
+                    ctx,
+                    centerX,
+                    centerY,
+                    options.xOffset,
+                    options.yOffset + options.glow.yOffset,
+                    options.glow.radiusX,
+                    options.glow.radiusY,
+                    options.glow.maxAlpha,
+                    0.1,
+                    baseColor
+                );
+
+                p.layers.push(lightCanvas);
+                // console.log("Lighting layer 'glow' added.");
+            }
+        },
+        "linearGradient": {
+            layer: 120,
+            load: async function(content) {
+                const options = setup.Paperdoll.models.lighting.options;
+                const p = content.p;
+
+                const lightCanvas = document.createElement('canvas');
+                lightCanvas.width = p.canvas.width;
+                lightCanvas.height = p.canvas.height;
+                const ctx = lightCanvas.getContext('2d');
+
+                const baseColor = lightBlendColor(options);
+
+                drawLinearGradient(
+                    ctx,
+                    options.gradient.maxAlpha,
+                    0.1,
+                    options.gradient.height,
+                    baseColor
+                );
+
+                p.layers.push(lightCanvas);
+                // console.log("Lighting layer 'linearGradient' added.");
+            }
+        },
+        "flatColorOverlay": {
+            layer: 130,
+            load: async function(content) {
+                const options =setup.Paperdoll.models.lighting.options;
+                const p = content.p;
+
+                const lightCanvas = document.createElement('canvas');
+                lightCanvas.width = p.canvas.width;
+                lightCanvas.height = p.canvas.height;
+                const ctx = lightCanvas.getContext('2d');
+                const baseColor = lightBlendColor(options);
+
+                drawColorOverlay(
+                    ctx,
+                    baseColor, // 使用计算出的基色
+                    options.flat.maxAlpha,
+                    0
+                );
+
+                p.layers.push(lightCanvas);
+                // console.log("Lighting layer 'flatColorOverlay' added.");
+            }
+        }
+    }
+};
+
+function interpolateColor(color1, color2, factor) {
+    const c1 = tinycolor(color1).toRgb();
+    const c2 = tinycolor(color2).toRgb();
+    const result = {
+        r: Math.round(c1.r + factor * (c2.r - c1.r)),
+        g: Math.round(c1.g + factor * (c2.g - c1.g)),
+        b: Math.round(c1.b + factor * (c2.b - c1.b)),
+        a: c1.a + factor * (c2.a - c1.a)
+    };
+    return tinycolor(result).toRgbString();
+}
+
+function drawRadialGradient(ctx, centerX, centerY, xOffset, yOffset, radiusX, radiusY, maxAlpha, intensity, baseColor = "#ffffff") {
+    const canvasWidth = ctx.canvas.width;
+    const canvasHeight = ctx.canvas.height;
+
+    const pixelxOffset = xOffset * canvasWidth;
+    const pixelyOffset = yOffset * canvasHeight;
+    const pixelradiusX = Math.max(1, radiusX * canvasWidth); // 保证半径至少为 1
+    const pixelradiusY = Math.max(1, radiusY * canvasHeight); // 保证半径至少为 1
+    const alpha = intensity * maxAlpha;
+    const color = tinycolor(baseColor).toRgb(); // 获取基色 RGB
+
+    ctx.save();
+    ctx.translate(centerX + pixelxOffset, centerY + pixelyOffset);
+    ctx.scale(pixelradiusX / pixelradiusY, 1);
+    const effectiveRadius = pixelradiusY;
+
+    const gradient = ctx.createRadialGradient(
+        0,
+        0,
+        0,
+        0,
+        0,
+        effectiveRadius
+    );
+
+    gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
+    gradient.addColorStop(0.5, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha * 0.33})`);
+    gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`);
+
+    ctx.fillStyle = gradient;
+    ctx.imageSmoothingEnabled = true;
+
+    const invScaleY = radiusY / radiusX;
+    ctx.fillRect(- (centerX + xOffset) * invScaleY, - (centerY + yOffset), ctx.canvas.width * invScaleY, ctx.canvas.height);
+
+    ctx.restore();
+}
+
+function drawLinearGradient(ctx, maxAlpha, intensity, height, baseColor = "#ffffff") {
+    const canvasWidth = ctx.canvas.width;
+    const canvasHeight = ctx.canvas.height;
+
+    const pixelheight = Math.max(1, height * canvasHeight);
+    const alpha = intensity * maxAlpha;
+    const color = tinycolor(baseColor).toRgb();
+    const gradient = ctx.createLinearGradient(0, 0, 0, pixelheight);
+
+    gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`);
+    gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0)`);
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, ctx.canvas.width, pixelheight);
+}
+
+function drawColorOverlay(ctx, color, maxAlpha, intensity) {
+    const baseRgba = tinycolor(color).toRgb();
+    const finalAlpha = Math.min(1, Math.max(0, intensity * maxAlpha * baseRgba.a));
+    const finalColor = `rgba(${baseRgba.r}, ${baseRgba.g}, ${baseRgba.b}, ${finalAlpha})`;
+
+    ctx.fillStyle = finalColor;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+}
+
+function lightBlendColor(options) {
+    const baseColor = options.colors.default;
+    const factor = 0;
+    return interpolateColor("#ffffff", baseColor, factor);
 }
