@@ -145,16 +145,26 @@ setup.Paperdoll.clotheSubLayers = async function(paperdoll, imgPath, color, body
 
 setup.Paperdoll.clotheDiffsLayer = async function(paperdoll, clothe, imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
     for (let subName in clothe.subs) {
-        if ((subName === 'color' || subName === 'color1') && (await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_right_gray.png`))) {
+        if (subName === 'color' || subName === 'color1') {
             continue;
-        } else {
-            if ((subName.indexOf('color') !== -1 || subName == "laces") && (await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_full_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_left_gray.png`) || await setup.Paperdoll.checkImgExists(`${imgPath}${subName}_right_gray.png`))) {
-                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}${subName}_`, setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe"), bodyClothes, leftHandClothes, rightHandClothes, backClothes);
-            } else {
-                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}${subName}/${clothe.subs[subName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
-            }
+        }
+
+        const subValue = clothe.subs[subName].replace(/ /g, '_');
+        const variantPath = `${imgPath}${subName}/${subValue}_`;
+        const tintablePath = `${imgPath}${subName}_`;
+
+        // 首先，检查一个特定的变体是否存在于子文件夹中（例如，"laces/red_full.png"）。
+        // 这可以是一个预着色的图像或一个不可着色的设计。
+        if (await setup.Paperdoll.checkSubsExists(variantPath)) {
+            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, variantPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+        }
+        // 如果没有，则检查一个通用的可着色图层（例如，"laces_full_gray.png"）。
+        else if (await setup.Paperdoll.checkSubsExists(tintablePath)) {
+            const tintColor = setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe");
+            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, tintablePath, tintColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
         }
     }
+
     if (window.breastType) {
         [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):""}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
     }

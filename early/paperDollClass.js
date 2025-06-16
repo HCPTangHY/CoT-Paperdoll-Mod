@@ -75,41 +75,53 @@
             return resultCanvas;
         }
 
-        async processDualColorHair(baseHairSrc, secondColorSrc, mainColor, secondColor, baseHairMaskSrc = null) {
+        async processDualColorHair(baseHairSrc, secondColorSrc, mainColor, secondColor) {
+            // Step 1: Load images
             let baseHairBase64 = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(baseHairSrc) || "";
             if (!baseHairBase64) return;
             const baseHairImg = new Image();
             baseHairImg.src = baseHairBase64;
             await new Promise(resolve => { baseHairImg.onload = resolve; });
 
-            let finalBaseHair = baseHairImg;
-            finalBaseHair = this.desaturateImage(finalBaseHair);
-            finalBaseHair = this.colorLayer(finalBaseHair, mainColor, setup.Paperdoll.layerBlendMode['hair'] || setup.Paperdoll.layerBlendMode['default']);
-            if (baseHairMaskSrc) {
-                await this.loadMask(baseHairMaskSrc, 'hair');
-                finalBaseHair = this.applyMask(baseHairImg, 'hair');
-            }
-            this.layers.push(finalBaseHair);
-
             let secondColorBase64 = await window.modUtils.pSC2DataManager.getHtmlTagSrcHook().requestImageBySrc(secondColorSrc) || "";
-            if (!secondColorBase64) return;
             const secondColorImg = new Image();
-            secondColorImg.src = secondColorBase64;
-            await new Promise(resolve => { secondColorImg.onload = resolve; });
-            const clippedSecondColorImg = this.clipImageByIntersection(
-                secondColorImg,
-                baseHairImg
-            );
+            if (secondColorBase64) {
+                secondColorImg.src = secondColorBase64;
+                await new Promise(resolve => { secondColorImg.onload = resolve; });
+            }
 
-            let imageToColor = this.desaturateImage(clippedSecondColorImg);
-            let coloredSecondLayer = this.colorLayer(
-                imageToColor,
-                secondColor,
-                setup.Paperdoll.layerBlendMode['hair'] || setup.Paperdoll.layerBlendMode['default']
-            );
+            // Step 2: Create colored layers in memory
+            let processedBaseHair = this.desaturateImage(baseHairImg);
+            processedBaseHair = this.colorLayer(processedBaseHair, mainColor, setup.Paperdoll.layerBlendMode['hair'] || setup.Paperdoll.layerBlendMode['default']);
 
-            let finalSecondLayer = this.applyMask(coloredSecondLayer, 'hair');
-            this.layers.push(finalSecondLayer);
+            let processedSecondLayer = null;
+            if (secondColorBase64) {
+                const clippedSecondColorImg = this.clipImageByIntersection(secondColorImg, baseHairImg);
+                let imageToColor = this.desaturateImage(clippedSecondColorImg);
+                processedSecondLayer = this.colorLayer(
+                    imageToColor,
+                    secondColor,
+                    setup.Paperdoll.layerBlendMode['hair'] || setup.Paperdoll.layerBlendMode['default']
+                );
+            }
+
+            // Step 3: Merge layers onto a new temporary canvas
+            const mergedCanvas = document.createElement('canvas');
+            mergedCanvas.width = this.canvas.width;
+            mergedCanvas.height = this.canvas.height;
+            const ctx = mergedCanvas.getContext('2d');
+            ctx.drawImage(processedBaseHair, 0, 0, mergedCanvas.width, mergedCanvas.height);
+            if (processedSecondLayer) {
+                ctx.drawImage(processedSecondLayer, 0, 0, mergedCanvas.width, mergedCanvas.height);
+            }
+
+            // Step 4: Chain apply the masks that are already on the instance.
+            // DO NOT load any masks here. The function signature is now correct.
+            let hairMaskedLayer = this.applyMask(mergedCanvas, 'hair');
+            let finalLayer = this.applyMask(hairMaskedLayer, 'clothe');
+
+            // Step 5: Push the final, single, fully-masked layer
+            this.layers.push(finalLayer);
         }
 
         updateMask(img, type) {
