@@ -242,7 +242,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         }
 
         let scalebase = canvas.height>canvas.width?canvas.height:canvas.width
-        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)})`;
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)/2})`;
         if (scalebase <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
@@ -299,7 +299,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         p.draw();
 
         let scalebase = p.canvas.height>p.canvas.width?p.canvas.height:p.canvas.width
-        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)})`;
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)/2})`;
         if (scalebase <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
