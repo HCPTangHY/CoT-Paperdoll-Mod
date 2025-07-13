@@ -144,25 +144,27 @@ setup.Paperdoll.clotheSubLayers = async function(paperdoll, imgPath, color, body
 }
 
 setup.Paperdoll.clotheDiffsLayer = async function(paperdoll, clothe, imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
-    for (let subName in clothe.subs) {
-        if (subName === 'color' || subName === 'color1') {
+    for (const subName in clothe.subs) {
+        const subValue = clothe.subs[subName].replace(/ /g, '_');
+
+        // 1. 检查预渲染图层 (e.g., red_full.png) - 不染色
+        const preRenderedPath = `${imgPath}${subValue}_`;
+        if (await setup.Paperdoll.checkImgExists(`${preRenderedPath}full.png`) || await setup.Paperdoll.checkImgExists(`${preRenderedPath}left.png`) || await setup.Paperdoll.checkImgExists(`${preRenderedPath}right.png`)) {
+            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, preRenderedPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
             continue;
         }
 
-        const subValue = clothe.subs[subName].replace(/ /g, '_');
-        const variantPath = `${imgPath}${subName}/${subValue}_`;
-        const tintablePath = `${imgPath}${subName}_`;
+        // 2. 检查灰度模板 (e.g., laces_full_gray.png) - 染色
+        const grayScalePath = `${imgPath}${subName}_`;
+        if (await setup.Paperdoll.checkImgExists(`${grayScalePath}full_gray.png`) || await setup.Paperdoll.checkImgExists(`${grayScalePath}left_gray.png`) || await setup.Paperdoll.checkImgExists(`${grayScalePath}right_gray.png`)) {
+            const color = setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe");
+            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, grayScalePath, color, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+            continue;
+        }
 
-        // 首先，检查一个特定的变体是否存在于子文件夹中（例如，"laces/red_full.png"）。
-        // 这可以是一个预着色的图像或一个不可着色的设计。
-        if (await setup.Paperdoll.checkSubsExists(variantPath)) {
-            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, variantPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
-        }
-        // 如果没有，则检查一个通用的可着色图层（例如，"laces_full_gray.png"）。
-        else if (await setup.Paperdoll.checkSubsExists(tintablePath)) {
-            const tintColor = setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe");
-            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, tintablePath, tintColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
-        }
+        // 3. 标准差分 (e.g., style/long_sleeve_full.png)
+        const defaultPath = `${imgPath}${subName}/${subValue}_`;
+        [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, defaultPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
     }
 
     if (window.breastType) {
@@ -238,11 +240,11 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         // 设置缩放
         function calculateScale(x) {
             if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
-            else return -0.000004481132075471626*x+1.504588679245283
+            else return (-0.000004481132075471626*x+1.4)/2
         }
 
         let scalebase = canvas.height>canvas.width?canvas.height:canvas.width
-        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)/2})`;
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)})`;
         if (scalebase <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
@@ -290,7 +292,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
 
     function calculateScale(x) {
         if (x <= 400) return -4.5413062686002426e-8 * x * x * x + 0.000051298595610111764 * x * x - 0.018759300595236547 * x + 3.752380952380881
-        else return -0.000004481132075471626*x+1.504588679245283
+        else return (-0.000004481132075471626*x+1.4)/2
     }
 
     setTimeout(() => {
@@ -299,7 +301,7 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
         p.draw();
 
         let scalebase = p.canvas.height>p.canvas.width?p.canvas.height:p.canvas.width
-        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)/2})`;
+        canvas.style.transform = `scale(${SCALE_SIZE?SCALE_SIZE:calculateScale(scalebase)})`;
         if (scalebase <= 256) {
             canvas.style.imageRendering = "pixelated";
             canvas.style.imageRendering = "crisp-edges";
