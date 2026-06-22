@@ -1,4 +1,8 @@
 if (!("Paperdoll" in setup)) setup.Paperdoll = {};
+// Paperdoll extension slots are declared here so TweeReplacer can insert @tag@ layer definitions without touching render code.
+setup.Paperdoll.tagSlots = {
+
+};
 setup.Paperdoll.cache = {
     canvasCache: new Map(),
     maxCacheSize: 10, // 最大缓存数量
@@ -111,46 +115,61 @@ setup.Paperdoll.colorConvert = function(color, type = "") {
     }
 }
 
-setup.Paperdoll.ifColorPush = async function(path, targetArray, color) {
-    if (await setup.Paperdoll.checkImgExists(`${path}_gray.png`)) {
-        targetArray.push({ "path": `${path}_gray.png`, "color": color });
-    } else {
-        targetArray.push({ "path": `${path}.png` });
+// ClothesSlot centralizes the original clothing sub-layer expansion. It keeps the legacy path order,
+// including the unchanged no-normalization behavior for imgPath, so existing image packs keep working.
+class ClothesSlot {
+    constructor(basePath, prefix = '') {
+        // prefix='' -> full.png, full_gray.png, acc_full.png
+        // prefix='laces_' -> laces_full_gray.png
+        // prefix='@sleeve@_' -> @sleeve@_full_gray.png
+        this.basePath = basePath;
+        this.prefix = prefix;
     }
-    return targetArray;
+
+    static PARTS = [
+        { key: 'full', queue: 'bodyClothes', hasAcc: true, hasMask: true },
+        { key: 'left', queue: 'leftHandClothes', hasAcc: true, hasMask: false },
+        { key: 'right', queue: 'rightHandClothes', hasAcc: true, hasMask: false },
+        { key: 'back', queue: 'backClothes', hasAcc: false, hasMask: false },
+    ];
+
+    async pushAll(queues, color, paperdoll, opts = { acc: true, mask: true }) {
+        for (const part of ClothesSlot.PARTS) {
+            const name = `${this.basePath}${this.prefix}${part.key}`;
+            if (await setup.Paperdoll.checkImgExists(`${name}_gray.png`)) {
+                queues[part.queue].push({ path: `${name}_gray.png`, color: color });
+            } else {
+                queues[part.queue].push({ path: `${name}.png` });
+            }
+            if (opts.acc && part.hasAcc) {
+                queues[part.queue].push({ path: `${this.basePath}${this.prefix}acc_${part.key}.png` });
+            }
+            if (opts.mask && part.hasMask) {
+                if (await setup.Paperdoll.checkImgExists(`${this.basePath}${this.prefix}mask.png`)) {
+                    await paperdoll.loadMask(`${this.basePath}${this.prefix}mask.png`, 'hair');
+                }
+                if (await setup.Paperdoll.checkImgExists(`${this.basePath}${this.prefix}clotheMask.png`)) {
+                    await paperdoll.loadClotheMask(`${this.basePath}${this.prefix}clotheMask.png`, 'clothe');
+                }
+            }
+        }
+        return queues;
+    }
 }
 
-setup.Paperdoll.clotheBaseSubLayers = async function(imgPath, color, bodyClothes, leftHandClothes, rightHandClothes) {
-    bodyClothes = await setup.Paperdoll.ifColorPush(`${imgPath}full`, bodyClothes, color);
-    leftHandClothes = await setup.Paperdoll.ifColorPush(`${imgPath}left`, leftHandClothes, color);
-    rightHandClothes = await setup.Paperdoll.ifColorPush(`${imgPath}right`, rightHandClothes, color);
-    return [bodyClothes, leftHandClothes, rightHandClothes];
-}
+// The class is exposed so image-pack extension scripts can reuse the same slot expansion logic.
+setup.Paperdoll.ClothesSlot = ClothesSlot;
 
-setup.Paperdoll.clotheSubLayers = async function(paperdoll, imgPath, color, bodyClothes, leftHandClothes, rightHandClothes,backClothes) {
-    [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheBaseSubLayers(imgPath, color, bodyClothes, leftHandClothes, rightHandClothes);
-    if (imgPath.charAt(imgPath.length - 1) !== '/') { imgPath.slice(0,-1); }
-    bodyClothes.push({ "path": `${imgPath}acc_full.png` });
-    leftHandClothes.push({ "path": `${imgPath}acc_left.png` });
-    rightHandClothes.push({ "path": `${imgPath}acc_right.png` });
-    if (await setup.Paperdoll.checkImgExists(`${imgPath}mask.png`)) {
-        await paperdoll.loadMask(`${imgPath}mask.png`,'hair');
-    }
-    if (await setup.Paperdoll.checkImgExists(`${imgPath}clotheMask.png`)) {
-        await paperdoll.loadClotheMask(`${imgPath}clotheMask.png`,'clothe');
-    }
-    backClothes = await setup.Paperdoll.ifColorPush(`${imgPath}back`, backClothes, color);
-    return [bodyClothes, leftHandClothes, rightHandClothes,backClothes];
-}
-
-setup.Paperdoll.clotheDiffsLayer = async function(paperdoll, clothe, imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
+setup.Paperdoll.clotheDiffsLayer = async function(paperdoll, clothe, imgPath, mainColor, queues) {
+    // clotheDiffsLayer now receives the grouped queues object, which avoids repeating four array
+    // parameters while preserving the original per-layer push order and image path checks.
     for (const subName in clothe.subs) {
         const subValue = clothe.subs[subName].replace(/ /g, '_');
 
         // 1. 检查预渲染图层 (e.g., red_full.png) - 不染色
         const preRenderedPath = `${imgPath}${subValue}_`;
         if (await setup.Paperdoll.checkImgExists(`${preRenderedPath}full.png`) || await setup.Paperdoll.checkImgExists(`${preRenderedPath}left.png`) || await setup.Paperdoll.checkImgExists(`${preRenderedPath}right.png`)) {
-            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, preRenderedPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+            await new ClothesSlot(preRenderedPath).pushAll(queues, mainColor, paperdoll);
             continue;
         }
 
@@ -158,22 +177,28 @@ setup.Paperdoll.clotheDiffsLayer = async function(paperdoll, clothe, imgPath, ma
         const grayScalePath = `${imgPath}${subName}_`;
         if (await setup.Paperdoll.checkImgExists(`${grayScalePath}full_gray.png`) || await setup.Paperdoll.checkImgExists(`${grayScalePath}left_gray.png`) || await setup.Paperdoll.checkImgExists(`${grayScalePath}right_gray.png`)) {
             const color = setup.Paperdoll.colorConvert(clothe.subs[subName], "clothe");
-            [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, grayScalePath, color, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+            await new ClothesSlot(grayScalePath).pushAll(queues, color, paperdoll);
             continue;
         }
 
         // 3. 标准差分 (e.g., style/long_sleeve_full.png)
         const defaultPath = `${imgPath}${subName}/${subValue}_`;
-        [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, defaultPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+        await new ClothesSlot(defaultPath).pushAll(queues, mainColor, paperdoll);
     }
 
     if (window.breastType) {
-        [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):""}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+        await new ClothesSlot(`${imgPath}breast${window.breastType=="num"?Math.floor(V.pc['breast size']/200):""}_`).pushAll(queues, mainColor, paperdoll);
     }
-    return [bodyClothes, leftHandClothes, rightHandClothes, backClothes];
+    return queues;
 }
 
-setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes) {
+setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes, content) {
+    // The four clothing queues are grouped for ClothesSlot and @tag@ support, while the public return
+    // value remains the original array tuple used by paperdollPC and existing callers.
+    let queues = { bodyClothes, leftHandClothes, rightHandClothes, backClothes };
+    content = content || queues;
+    Object.assign(content, queues);
+
     window.breastType = null
     let breastType = []
     for (let i = 0; i < clothes.length; i++) {
@@ -200,21 +225,41 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
             mainColor = setup.Paperdoll.colorConvert(clothes[i].subs['color'], "clothe") || setup.Paperdoll.colorConvert(clothes[i].subs['color1'], "clothe");
         }
         // main
-        [bodyClothes, leftHandClothes, rightHandClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll,imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes,backClothes);
+        await new ClothesSlot(imgPath).pushAll(queues, mainColor, paperdoll);
         // configurations
         if (Object.keys(clothes[i].configs).length > 0) {
             for (let configName in clothes[i].configs) {
-                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheSubLayers(paperdoll, `${imgPath}${configName.replace(/ /g, '_')}/${clothes[i].configs[configName].replace(/ /g, '_')}_`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
-                [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheDiffsLayer(paperdoll, clothes[i], `${imgPath}${configName.replace(/ /g, '_')}/`, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+                await new ClothesSlot(`${imgPath}${configName.replace(/ /g, '_')}/${clothes[i].configs[configName].replace(/ /g, '_')}_`).pushAll(queues, mainColor, paperdoll);
+                await setup.Paperdoll.clotheDiffsLayer(paperdoll, clothes[i], `${imgPath}${configName.replace(/ /g, '_')}/`, mainColor, queues);
                 if (configName === "hood" && clothes[i].configs[configName] === "up") {
                     window.hoodState = "up"
                 }
             }
         }
         // sub
-        [bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheDiffsLayer(paperdoll, clothes[i], imgPath, mainColor, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+        await setup.Paperdoll.clotheDiffsLayer(paperdoll, clothes[i], imgPath, mainColor, queues);
+
+        // @tag@ child layers are scanned after the base, config, and sub layers so each clothing item can
+        // contribute optional overlay queues without changing the legacy queue return format.
+        if (setup.Paperdoll._tagIndex) {
+            const tags = setup.Paperdoll._tagIndex.get(imgPath);
+            if (tags) {
+                for (const tag of tags) {
+                    const tagDef = setup.Paperdoll.tagSlots[tag];
+                    if (!tagDef || tagDef.z == null) {
+                        // 没声明 z → 推进原衣服的四个队列，跟主体同层
+                        await new ClothesSlot(imgPath, `@${tag}@_`).pushAll(queues, mainColor, paperdoll, {acc:false, mask:false});
+                    } else {
+                        // 有 z → 推进独立 tag 队列，渲染到自定义层
+                        const tagQueues = content[`_tag_${tag}`] || {bodyClothes:[], leftHandClothes:[], rightHandClothes:[], backClothes:[]};
+                        await new ClothesSlot(imgPath, `@${tag}@_`).pushAll(tagQueues, mainColor, paperdoll, {acc:false, mask:false});
+                        content[`_tag_${tag}`] = tagQueues;
+                    }
+                }
+            }
+        }
     }
-    return [paperdoll, bodyClothes, leftHandClothes, rightHandClothes, backClothes];
+    return [paperdoll, queues.bodyClothes, queues.leftHandClothes, queues.rightHandClothes, queues.backClothes];
 }
 setup.Paperdoll.layerBlendMode = {
     'clothes': 'hard-light',
@@ -268,14 +313,38 @@ setup.Paperdoll.paperdollPC = async function(canvas) {
     let rightHandClothes = [];
     let bodyClothes = [];
     let backClothes = [];
-    [p, bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheLayers(p, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes);
+    // content is created before clotheLayers so @tag@ queues discovered during clothing expansion can be
+    // carried into the later dynamic layer registration step without changing the tuple return interface.
+    let content = {p, baseURL, backClothes, leftHandClothes, rightHandClothes, bodyClothes};
+    [p, bodyClothes, leftHandClothes, rightHandClothes, backClothes] = await setup.Paperdoll.clotheLayers(p, clothes, bodyClothes, leftHandClothes, rightHandClothes, backClothes, content);
+    Object.assign(content, {p, baseURL, backClothes, leftHandClothes, rightHandClothes, bodyClothes});
 
     // 其他图层插入点
     // Object.assign(PCLayers, {xxxx});
 
     // 后景替换插入点
     let PCLayers = setup.Paperdoll.models.main.layer;
-    let content = {p, baseURL, backClothes, leftHandClothes, rightHandClothes, bodyClothes};
+
+    // Registered @tag@ queues become render layers here, allowing image packs to place optional clothing
+    // overlays at custom z values declared in setup.Paperdoll.tagSlots.
+    for (const [tag, def] of Object.entries(setup.Paperdoll.tagSlots)) {
+        const queueKey = `_tag_${tag}`;
+        if (content[queueKey] && def.z != null) {
+            PCLayers[`tagClothes_${tag}`] = {
+                layer: def.z,
+                load: async function(ctx) {
+                    const items = ctx[queueKey];
+                    if (!items) return;
+                    for (const q of ['bodyClothes','leftHandClothes','rightHandClothes','backClothes']) {
+                        for (const item of (items[q] || [])) {
+                            if (item.color) await ctx.p.loadLayer(item.path, item.color, 'clothes');
+                            else await ctx.p.loadLayer(item.path);
+                        }
+                    }
+                }
+            };
+        }
+    }
 
     const sortedLightingLayers = Object.entries(setup.Paperdoll.models.lighting.layer).sort(([, a], [, b]) => a.layer - b.layer);
     for (const [name, layerDef] of sortedLightingLayers) {
