@@ -209,7 +209,7 @@ setup.Paperdoll.clotheLayers = async function(paperdoll, clothes, bodyClothes, l
         if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast${Math.floor(V.pc['breast size']/200)}`)) {
             breastType[breastType.length-1] = "num"
         } else if (await setup.Paperdoll.checkSubsExists(`${imgPath}breast`)) {
-            breastType[breastType.length-1] = "dafault"
+            breastType[breastType.length-1] = "default"
         }
     }
     window.breastType = breastType.length > 0 ?
@@ -387,6 +387,30 @@ setup.Paperdoll.mirrorPC = function() {
     $("#paperdollMirror").width('85vw');
     $("#paperdollMirror").css("display", "grid");
     $("#paperdollMirror").append(`<canvas id="paperdollPC-canvas-dialog"></canvas>`);
+
+    // 下载按钮 — 绝对定位到关闭按钮左边
+    const titlebar = document.getElementById('ui-dialog-titlebar');
+    if (titlebar && !document.getElementById('paperdoll-download-btn')) {
+        const closeBtn = document.getElementById('ui-dialog-close');
+        // 读取关闭按钮的实际尺寸来计算偏移
+        const closeBtnWidth = closeBtn ? closeBtn.offsetWidth : 36;
+        const btn = document.createElement('button');
+        btn.id = 'paperdoll-download-btn';
+        btn.className = 'ui-close';
+        btn.innerHTML = '💾';
+        btn.title = 'Save Image';
+        btn.tabIndex = 0;
+        btn.style.cssText = `position:absolute;right:${closeBtnWidth}px;top:0;background:transparent;border:none;font-size:inherit;color:inherit;margin:0;line-height:inherit;`;
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const canvas = document.getElementById('paperdollPC-canvas-dialog');
+            if (!canvas) return;
+            setup.Paperdoll.saveCanvasImage(canvas);
+        });
+        titlebar.appendChild(btn);
+    }
+
     (async function() {
         const cache = setup.Paperdoll.cache.generateKey(V.pc.clothes, V.pc);
         setup.Paperdoll.cache.canvasCache.delete(cache);
@@ -405,6 +429,35 @@ setup.Paperdoll.mirrorPC = function() {
             $("#paperdollMirror").width(canvas.style.width);
         }, 500);
     })();
+}
+
+// Canvas 图片保存 — 自动检测环境，浏览器用 <a download>，WebView 用 Share API / 长按保存 fallback
+setup.Paperdoll.saveCanvasImage = function(canvas) {
+    canvas.toBlob(function(blob) {
+        if (!blob) return;
+        const file = new File([blob], 'paperdoll.png', { type: 'image/png' });
+
+        // 优先尝试 Web Share API（Android WebView 友好）
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: 'Paperdoll' }).catch(function() {});
+            return;
+        }
+
+        // 浏览器环境 — <a download>
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'paperdoll.png';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+
+        // 如果 <a download> 没反应（WebView），fallback 到新窗口展示图片让用户长按保存
+        setTimeout(function() {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 1000);
+    }, 'image/png');
 }
 
 let oldversion = false;
